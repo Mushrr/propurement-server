@@ -1,0 +1,37 @@
+{
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "no-unreachable": "error",
+        "use-isnan": "error",
+        "accessor-pairs": "warn", // getter setter 同时出现
+        "class-methods-use-this": "error", // 强制使用this
+        "curly": "warn", // 强制使用一致的括号风格
+        "eqeqeq": "error", // 强制使用===，!==
+        "no-empty": "error", // 禁止空结构模式
+        "no-implied-eval": "error", // 禁止使用eval
+        "no-multi-spaces": "error", // 禁止使用多个空格
+        "no-buffer-constructor": "error", // 禁用buffer构造函数
+        "camelcase": "warn" // 驼峰命名
+    },
+    "globals": {
+        "__dirname": "readonly",
+        "process": "writable",
+        "exports": "writable",
+        "require": "readonly"
+    }
+}
