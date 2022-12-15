@@ -35,7 +35,7 @@ app.use(router.routes()).use(router.allowedMethods());
 // listen
 app.listen(process.env.PORT, () => {
     console.log(`
-    ${new Date().toLocaleString()}, Server Start at ${process.env.PORT || 3000}, Env: ${process.env.NODE_ENV || "development"}.
+    \x1B[32m${new Date().toLocaleString()}\x1B[0m, Server Start at ${process.env.PORT || 3000}, Env: ${process.env.NODE_ENV || "development"}.
     You can visit \x1B[36m\x1B[4mhttp://localhost:${process.env.PORT || 3000}\x1B[0m  to see the result.
                                                 —— Developed By Mushr
     `)

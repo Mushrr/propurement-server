@@ -15,6 +15,12 @@ interface WxUserInfo {
     session_key: string;
 }
 
+/**
+ * 如果用户完全未登录过，则会构造一个用户默认的信息
+ * 如果用户登录过且session_key有效，则会返回用户的信息
+ * 如果用户session_key过期，则修改session_key，返回用户的信息
+ */
+
 const userRoute: Router = new Router();
 
 userRoute.post("/", async (ctx: Context) => {
@@ -40,30 +46,35 @@ userRoute.post("/", async (ctx: Context) => {
         logger.info("有新用户登入 获取到的openid为: " + wxUserInfo.openid);
         logger.info("有新用户登入 获取到的session_key为: " + wxUserInfo.session_key);
 
+        // 保存用户信息
+
+        if (!await userCollection.findOne({ openid: wxUserInfo.openid })) {
+            // 用户schema
+            const userInfo: UserInfo = {
+                openid: wxUserInfo.openid,
+                session_key: wxUserInfo.session_key,
+                user_type: "unknown", // 还待验证!!!!, 后期根据这个区分不同的用户
+                organization: {
+                    company: "unknown",
+                    department: "unknown",
+                    position: "unknown",
+                    phone_number: "unknown",
+                    principal: "unknown"
+                }
+            }
+            // 不存在用户信息, 则插入
+            userCollection.insertOne(userInfo); // 不需要阻塞
+        } else {
+            userCollection.findOneAndUpdate({ openid: wxUserInfo.openid }, {
+                $set: { session_key: wxUserInfo.session_key }
+            }); // 不需要阻塞
+        }
+        
         ctx.body = {
             code: 200,
             msg: "code 登入成功",
             data: await userCollection.findOne({ openid: wxUserInfo.openid })
         };
-
-        // 保存用户信息
-        const userInfo: UserInfo = {
-            openid: wxUserInfo.openid,
-            session_key: wxUserInfo.session_key,
-            user_type: "unknown", // 还待验证!!!!, 后期根据这个区分不同的用户
-            organization: {
-                company: "unknown",
-                department: "unknown",
-                position: "unknown",
-                phone_number: "unknown",
-                principal: "unknown"
-            }
-        }
-        if (!await userCollection.findOne({ openid: wxUserInfo.openid })) {
-            // 不存在用户信息, 则插入
-            userCollection.insertOne(userInfo); // 不需要阻塞
-        }
-        
         // 保存用户信息
         if (hasProperties(ctx.request.body, ["userInfo", "update"])) {
             const wxUserInfo: UserInfo = ctx.request.body.userInfo;
