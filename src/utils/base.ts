@@ -30,7 +30,7 @@ type elType = string | number | object | undefined | null;
  * @returns 扁平化的数据
  * TODO 如果数组传递进来很可能出现错误!!!!
  */
-function objectToMongoUpdateSchema(obj: object, prefix: string | undefined = undefined) {
+function objectToMongoUpdateSchema(obj: object, prefix: string | undefined = undefined, skip: string[] = []) {
     const setData: {
         [propName: string]: elType
     } = {};
@@ -42,7 +42,9 @@ function objectToMongoUpdateSchema(obj: object, prefix: string | undefined = und
         const currentParse = objList.pop();
         for (const [key, value] of Object.entries(currentParse!)) {
             const newPrefix: string = top ? `${top}.${key}` : key
-            if (isObject(value)) {
+            if (skip.indexOf(key)) {
+                setData[newPrefix] = value;
+            } else if (isObject(value)) {
                 prefixStack.push(newPrefix);
                 objList.push(value);
             } else {

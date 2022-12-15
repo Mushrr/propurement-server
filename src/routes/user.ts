@@ -30,12 +30,13 @@ userRoute.post("/", async (ctx: Context) => {
         // 返回
         // 目前微信小程序已经不需要获取用户的个人信息了，可以直接通过open-data获得
         const session_key = ctx.request.body.session_key;
-
+        const data = await userCollection.findOne({ session_key: session_key });
         ctx.body = {
             code: 200,
             msg: "session_key 登入成功",
-            data: await userCollection.findOne({ session_key: session_key })
+            data
         }
+
         logger.info("用户登入 获取到的session_key为: " + session_key);
     } else if (hasProperties(ctx.request.body, ["code"])) {
         console.log(ctx.request.body.code);
@@ -67,11 +68,11 @@ userRoute.post("/", async (ctx: Context) => {
                 $set: { session_key: wxUserInfo.session_key }
             }); // 不需要阻塞
         }
-        
+        const data = await userCollection.findOne({ openid: wxUserInfo.openid });
         ctx.body = {
             code: 200,
             msg: "code 登入成功",
-            data: await userCollection.findOne({ openid: wxUserInfo.openid })
+            data
         };
         // 保存用户信息
         if (hasProperties(ctx.request.body, ["userInfo", "update"])) {
