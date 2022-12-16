@@ -189,7 +189,11 @@ adminPropurementRoute.post("/", async (ctx, next) => {
     await next();
 })
 
-
+/**
+ * 删除物品
+ * @param openid 管理员openid
+ * @param uuid 物品uuid
+ */
 adminPropurementRoute.del("/", async (ctx, next) => {
     const db = ctx.state.db as Db;
     const propurementCollection = db.collection("propurement");
