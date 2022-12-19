@@ -97,19 +97,19 @@ adminPropurementRoute.post("/", async (ctx, next) => {
                 }
                 if (hasProperties(req, ["propurement"])) {
                     const propurement = req.propurement as PropurementInfo;
-                    if (hasProperties(propurement, ["name", "defaultPrice", "category"])) {
-                        const excludePropurement = extractObject(propurement, ["name", "uuid", "defaultPrice", "category"]);
+                    if (hasProperties(propurement, ["name", "defaultUnits", "category"])) {
+                        const excludePropurement = extractObject(propurement, ["name", "uuid", "defaultUnits", "category"]);
                         const propurementSchema = {
                             uuid: uuidv4(),
                             name: propurement.name,
-                            defaultPrice: propurement.defaultPrice,
+                            defaultUnits: propurement.defaultUnits,
                             category: propurement.category, // 上述都是必要信息, 必须得填的
                             ...excludePropurement, //  其他信息
                             lastChange: Timestamp.fromNumber(new Date().valueOf())
                         }
                         const insertAns = await propurementCollection.insertOne(propurementSchema);
 
-                        logger.info(`[${propurementSchema.name} | ${propurement.defaultPrice}￥] 添加成功!`);
+                        logger.info(`[${propurementSchema.name} | ${propurement.defaultUnits.join("|")}] 添加成功!`);
 
                         ctx.body = {
                             code: 200,

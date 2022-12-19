@@ -14,7 +14,10 @@ interface UserInfo {
     };
 }
 
+type UserType = "admin" | "agent" | "user" | null;
+
 
 export type {
-    UserInfo
+    UserInfo,
+    UserType
 }

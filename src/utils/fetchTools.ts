@@ -1,3 +1,6 @@
+import { UserType } from '@locTypes/user';
+import { Db } from 'mongodb';
+import logger from './logger';
 
 /**
  * 获取微信用户Openid
@@ -23,6 +26,31 @@ function getWxUserOpenid(code: string) {
     })
 }
 
+
+/**
+ * 查看用户的类型
+ * @param db Mongo数据库
+ * @param openid openid
+ * @returns 用户的类型
+ */
+function getUserType(db: Db, openid: string): Promise<UserType> {
+    return new Promise((resolve, reject) => {
+        const userCollection = db.collection("user");
+        userCollection.findOne({ openid: openid }).then(res => {
+            if (res) {
+                resolve(res.user_type);
+            } else {
+                reject(null);
+            }
+        }).catch(err => {
+            reject(null);
+            logger.error(err);
+            throw err;
+        })
+    })
+}
+
 export {
-    getWxUserOpenid
+    getWxUserOpenid,
+    getUserType
 }

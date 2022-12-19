@@ -34,7 +34,10 @@ interface GoodDocument {
     lastChange: Timestamp
 }
 
+type AnyFunc = (...args: any[]) => any;
+
 export {
-    GoodDocument
+    GoodDocument,
+    AnyFunc
 }
 
