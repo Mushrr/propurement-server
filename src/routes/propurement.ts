@@ -1,8 +1,8 @@
 import { UserType } from '@locTypes/user';
 import { hasProperties, extractObject, objectToMongoUpdateSchema, objectStringSchema } from '@utils/base';
-import { getUserType } from '@utils/fetchTools';
+import { getCollection, getUserType, validateTransition, validateUser } from '@utils/fetchTools';
 import logger from '@utils/logger';
-import { UserItemDetail, PurchaseRecord } from '@locTypes/items'
+import { UserItemDetail, PurchaseRecord, AgentItemDetail } from '@locTypes/items'
 // 用户能够对物品的操作
 // 普通用户: 
 // search: 搜索
@@ -17,7 +17,8 @@ import Route from "koa-router";
 import { Context } from 'koa';
 import { Db } from 'mongodb';
 import { AnyFunc } from '@locTypes/base';
-import { isObject } from 'mushr';
+import { isNumber, isObject, isString } from 'mushr';
+import { agentStates } from 'config';
 
 const propurementRoute = new Route();
 
@@ -132,6 +133,32 @@ async function agentSearchHandler(ctx: Context) {
      * 代理人可以通过uuid来修改物品的状态，状态将会反馈在物品的 status 中
      * 同时代理人也可以反馈一些信息回来，这些信息将会反馈在物品的 message 中
      */
+
+    const itemsCollection = await getCollection(ctx, "items");
+    const req = ctx.request.query || {};
+
+    if (hasProperties(req, ["openid"]) && isString(req.openid)) {
+        const isUserValidate = await validateUser(req.openid as string, ctx);
+        if (isUserValidate === "agent") {
+            const data = itemsCollection.find({
+                agentOpenid: req.openid,
+                state: "waiting"
+                // 分配给当前代理的所有正在等待的item
+            })
+            ctx.body = {
+                code: 200,
+                message: "获取订单信息成功!",
+                data: data || []
+            }
+        }
+    } else {
+        ctx.body = {
+            code: 400,
+            message: `获取订单错误!!!您身份有误 ${ctx.ip}`
+        }
+        ctx.status = 400
+        logger.warn(`${ctx.ip} 正在尝试越权 访问代理信息`);
+    }
 }
 
 /**
@@ -156,6 +183,16 @@ propurementRoute.get("/", async (ctx, next) => {
 
 // OPENID + DEFAULT+UUID
 // 物品的UUID + OPENID + number 
+/**
+ * 
+ * @param {string} openid 用户openid
+ * @param {string} uuid 用户物品信息
+ * @param {{
+ *      unit: string,
+ *      price: number,
+ *      comment: string
+ * }}  comment 评论信息
+ */
 
 async function userChangeHandler(ctx: Context) {
     // TODO 用户是产生订单的，这些信息将即在一个临时订单号中，这个订单号将与购物车绑定。
@@ -215,8 +252,6 @@ async function userChangeHandler(ctx: Context) {
                 }
                 logger.info(`${ctx.request.ip} 添加了一条订单记录!`);
             }
-
-            
         } else {
             ctx.body = {
                 code: 500,
@@ -235,12 +270,146 @@ async function userChangeHandler(ctx: Context) {
     }
 }
 
+
+// agentID, uuid
+// 状态 + 代理人 + transitionId + UUID
+// 在分配给当前代理人的待处理订单中找到自己的订单，然后处理更新订单中的UUID，给出自己的detail
+// openid + transition + uuid + detail
+/**
+ * 
+ * @param {string} openid openid
+ * @param {string} uuid 物品唯一编码
+ * @param {string} transitionId 交易编码
+ * @param {"waiting" | "agent-accept" | "agent-refuse"} state 状态修改
+ * @param {{
+ *      unit: string,
+ *      number: number,
+ *      price: number,
+ *      comment: string
+ * }} detail 详细信息
+ */
 async function agentChangeHandler(ctx: Context) {
     // TODO 代理获取到分配的订单之后，需要处理订单，产生报价，修改订单状态，反馈意见。
+    const db = ctx.state.db as Db;
+    const itemsCollection = db.collection("items");
+    const propurementCollection = db.collection("propurement");
+    const req = ctx.request.body || {};
+
+    if (hasProperties(req, ["openid", "uuid", "transitionId", "detail", "state"])) {
+        const isUserValidate = await validateUser(req.openid, ctx);
+        if (agentStates.indexOf(req.state) > -1) {
+            if (isUserValidate) {
+                const transitionField = {
+                    transitionId: req.transitionId,
+                    uuid: req.uuid,
+                    agentOpenid: req.openid
+                };
+                const transitionValidate = await validateTransition(transitionField, ctx);
+    
+                if (transitionValidate) {
+                    const agentReqDetail: AgentItemDetail = req.detail;
+                    if (isNumber(agentReqDetail.number) && isNumber(agentReqDetail.agentPrice)) {
+                        
+                        // 1, 更新当前物品信息  
+                        const ans = await itemsCollection.findOneAndUpdate(transitionField, objectToMongoUpdateSchema({
+                            agentDetail: agentReqDetail,
+                            state: req.state
+                        }))
+                        if (ans.ok) {
+                            ctx.body = {
+                                code: 200,
+                                message: `对 ${req.uuid} 的修改成功`
+                            }
+                            logger.info(`代理 ${req.openid} 完成了 对 ${req.uuid} 的修改`);
+    
+    
+                            //2. 修改 物品的代理人报价
+    
+                            // 是否存在
+                            const ifExist = await propurementCollection.findOneAndUpdate({
+                                uuid: req.uuid,
+                                "agentPrices.agent": req.openid,
+                                "agentPrices.unit": req.detail.unit // 单位
+                            }, {
+                                $set: objectToMongoUpdateSchema({
+                                    price: req.detail.price
+                                }, "agentPrices.$")
+                            })
+                            // 不存在就添加
+                            if (!ifExist.value?._id) {
+                                propurementCollection.updateOne({
+                                    uuid: req.uuid,
+                                }, {
+                                    $push: {
+                                        "agentPrice": {
+                                            agent: req.openid,
+                                            unit: req.detail.unit,
+                                            price: req.detail.price, 
+                                        }
+                                    }
+                                }).then(() => {
+                                    logger.info(`代理 ${req.openid} 成功添加了 ${req.uuid} - ${req.detail.unit} - ${req.detail.price}`)
+                                }).catch(err => {
+                                    logger.error(err);
+                                })
+                            }
+    
+                        } else {
+                            ctx.body = {
+                                code: 500,
+                                message: "后台出现错误"
+                            }
+                            ctx.status = 500
+                            logger.error("代理修改物品失败，可能是后台数据库出现错误，运行异常!");
+                        }
+                    } else {
+                        ctx.body = {
+                            code: 500,
+                            message: "agentPrice和number的数据格式不对!"
+                        }
+                        logger.warn(`代理 ${req.openid} 上传了一个错误的请求 数据格式不对`)
+                    }
+    
+                } else {
+                    ctx.body = {
+                        code: 404,
+                        message: "未找到您需要的记录"
+                    }
+                    ctx.status = 404;
+                    logger.warn(`代理 ${req.openid} 未找到对应的记录`)
+                }
+    
+            } else {
+                ctx.body = {
+                    code: 400,
+                    message: "用户非法，请确认身份后访问"
+                }
+                ctx.status = 400;
+            }
+        } else {
+            logger.warn(`${ctx.ip} ${req.openid} 正在越权修改订单状态!!`);
+            ctx.body = {
+                code: 400,
+                message: `${req.openid} 您正在越权访问，请向管理员申诉以获得相应权限`
+            }
+            ctx.status = 400
+        }
+    } else {
+        ctx.body = {
+            code: 500,
+            message: "缺少必要元素: openid, uuid, transition, detail"
+        }
+        ctx.status = 500;
+    }
 }
 
 /**
- * 
+ * 处理用户对单个订单的操作, 第一次插入订单，第二次修改订单🐼
+ * @param {string} openid 用户的openid, 将会备用来查找用户的身份信息， 这个身份信息只能管理员更改
+ * @param {string} uuid 物品的uuid
+ * @param {UserItemDetail} detail 物品的详细信息: number, unit, comment
+ * @return 是否插入成功
+ * @description 用户将会在这里插入订单，这个订单将会在购物车中，等待代理的处理, 如果不是则直接更新订单
  */
 propurementRoute.post("/", async (ctx, next) => {
 

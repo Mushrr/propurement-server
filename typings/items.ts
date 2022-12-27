@@ -9,6 +9,7 @@ interface PurchaseRecord {
     openid: string, // 用户的openid
     number: number, // 购买的数量
     unit: string, // 在这里被指定，后台选择单位后，转发到指定代理处
+    state?: "uncommitted" | "waiting" | "agent-accept" | "agent-refuse" | "pricing" | "distributing" | "finished"
     agentOpenid?: string, // 指定代理人的openid
     userComment?: GoodDocument | string, // 用户的评价
     agentComment?: GoodDocument | string, // 代理人的评价
@@ -18,10 +19,19 @@ interface PurchaseRecord {
 interface UserItemDetail {
     unit: string, // 单位
     number: number, // 数量
-    comment: GoodDocument | string, // 可以是富文本，也可以是单纯的字符串
+    comment: GoodDocument | string | null, // 可以是富文本，也可以是单纯的字符串
+}
+
+// 代理的修改意见
+interface AgentItemDetail {
+    unit: string, // 单位
+    number: number,
+    agentPrice: number, // 代理给出的价格
+    comment: GoodDocument | string | null,
 }
 
 export {
     PurchaseRecord,
-    UserItemDetail
+    UserItemDetail,
+    AgentItemDetail
 }

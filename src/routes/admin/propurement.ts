@@ -22,7 +22,7 @@ adminPropurementRoute.get("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
         if (process.env.ADMIN_OPENID === req.openid) {
-            const query = extractObject(req, ["openid", "page", "pageSize"]);
+            const query = objectToMongoUpdateSchema(extractObject(req, ["openid", "page", "pageSize"]));
             const propurementCursor = propurementCollection.find(
                 query
             );
@@ -78,7 +78,7 @@ adminPropurementRoute.get("/", async (ctx, next) => {
 /**
  * @param openid 管理员的openid
  * @param eventType “add" | ”change“ 事件类型
- * @param propurement 如果是 add 则需要提供 name price category 如果是 change 则需要提供 uuid
+ * @param propurement 如果是 add 则需要提供 name defaultUnit category 如果是 change 则需要提供 uuid
  */
 adminPropurementRoute.post("/", async (ctx, next) => {
     const db = ctx.state.db as Db;

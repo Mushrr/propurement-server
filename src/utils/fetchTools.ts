@@ -1,4 +1,6 @@
+import { PurchaseRecord } from '@locTypes/items';
 import { UserType } from '@locTypes/user';
+import { Context } from 'koa';
 import { Db } from 'mongodb';
 import logger from './logger';
 
@@ -50,7 +52,64 @@ function getUserType(db: Db, openid: string): Promise<UserType> {
     })
 }
 
+/**
+ * 
+ * @param openid 
+ * @param ctx 
+ * @returns 
+ */
+// TODO 将所有用户认证都放到这一个函数中!!!!!, 方便统一调度
+async function validateUser(openid: string, ctx: Context) {
+    const db = ctx.state.Db as Db;
+    const userCollection = db.collection('user');
+
+    const userInfo = await userCollection.findOne({ openid });
+    // 非授权用户禁止访问
+    if (!userInfo?._id || userInfo?.user_type === "unknown") {
+        return false;
+    }
+    return userInfo?.user_type
+}
+
+interface transitionBase {
+    transitionId: string; // 交易ID
+    uuid: string; // UUID
+    [prop: string]: string | object | number;
+}
+
+/**
+ * 从数据库中获取一个集合
+ * @param ctx 上下文
+ * @param collection 集合名
+ * @returns 集合
+ */
+async function getCollection(ctx: Context, collection: string) {
+    return (ctx.state.Db as Db).collection(collection);
+}
+
+async function validateTransition(transitionInfo: transitionBase, ctx: Context) {
+    const itemCollection = await getCollection(ctx, "items");
+    const queryField: transitionBase = {
+        transitionId: transitionInfo.transitionId,
+        uuid: transitionInfo.uuid,
+    }
+    if (transitionInfo.agentOpenid) {
+        queryField.agentOpenid = transitionInfo.agentOpenid;
+        queryField.state = "waiting" // 只有等待中，才能被代理访问
+    }
+
+    const transition = await itemCollection.findOne(queryField);
+    if (transition?._id) {
+        return transition;
+    } else {
+        return false;
+    }
+}
+
 export {
     getWxUserOpenid,
-    getUserType
+    getUserType,
+    validateUser,
+    getCollection,
+    validateTransition
 }
