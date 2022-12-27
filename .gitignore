@@ -1,3 +1,4 @@
 node_modules
 screenshots/*.mp4
 dist
+public/*
