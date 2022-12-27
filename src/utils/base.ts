@@ -1,4 +1,6 @@
+import { PathLike } from "fs";
 import { isObject } from "mushr";
+import metaTypeMapping from "../../meta"
 
 /**
  * Check if an object has all the properties in an array
@@ -76,9 +78,25 @@ function extractObject(obj: object, excludeProperties: string[] = [], flip = fal
     return ans;
 }
 
+/**
+ * 返回文件的meta类型
+ * @param path 路径
+ * @returns metaType
+ */
+function getMetaType(path: PathLike) {
+    const pathStr = path.toString();
+    const extension: keyof typeof metaTypeMapping = (pathStr.split(".").pop() || "default") as keyof typeof metaTypeMapping;
+    if (metaTypeMapping[extension]) {
+        return metaTypeMapping[extension]
+    } else {
+        return metaTypeMapping["default"]
+    }
+}
+
 export {
     hasProperties,
     objectStringSchema,
     objectToMongoUpdateSchema,
-    extractObject
+    extractObject,
+    getMetaType
 }

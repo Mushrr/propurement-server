@@ -60,7 +60,7 @@ function getUserType(db: Db, openid: string): Promise<UserType> {
  */
 // TODO 将所有用户认证都放到这一个函数中!!!!!, 方便统一调度
 async function validateUser(openid: string, ctx: Context) {
-    const db = ctx.state.Db as Db;
+    const db = ctx.state.db as Db;
     const userCollection = db.collection('user');
 
     const userInfo = await userCollection.findOne({ openid });
