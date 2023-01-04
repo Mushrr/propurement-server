@@ -59,7 +59,7 @@ function getUserType(db: Db, openid: string): Promise<UserType> {
  * @returns 
  */
 // TODO 将所有用户认证都放到这一个函数中!!!!!, 方便统一调度
-async function validateUser(openid: string, ctx: Context) {
+async function validateUser(openid: string | undefined, ctx: Context): Promise<UserType | false> {
     const db = ctx.state.db as Db;
     const userCollection = db.collection('user');
 
@@ -84,7 +84,7 @@ interface transitionBase {
  * @returns 集合
  */
 async function getCollection(ctx: Context, collection: string) {
-    return (ctx.state.Db as Db).collection(collection);
+    return (ctx.state.db as Db).collection(collection);
 }
 
 async function validateTransition(transitionInfo: transitionBase, ctx: Context) {

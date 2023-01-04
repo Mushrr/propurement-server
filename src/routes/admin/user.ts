@@ -27,7 +27,7 @@ adminUserRoute.get("/", async (ctx, next) => {
                 query
             );
             const userData = [];
-            const page: number = req.page as number | undefined || 0;
+            const page: number = req.page as number | undefined || 1;
             const pageSize: number = req.pageSize as number | undefined || 10;
             if (page < 1) {
                 ctx.body = {
@@ -75,6 +75,7 @@ adminUserRoute.post("/", async (ctx, next) => {
     const req = ctx.request.body || {};
     const db = ctx.state.db as Db;
     const userCollection = db.collection("user");
+    console.log(req);
     if (hasProperties(req, ["openid", "userInfo"])) {
         const userInfo = req.userInfo as UserInfo;
         if (req.openid === process.env.ADMIN_OPENID) {

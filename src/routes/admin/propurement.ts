@@ -51,7 +51,7 @@ adminPropurementRoute.get("/", async (ctx, next) => {
                 ctx.body = {
                     code: 200,
                     message: "获取成功",
-                    data: propurementData
+                    data: propurementData,
                 }
             }
         } else {

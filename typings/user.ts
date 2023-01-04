@@ -1,10 +1,10 @@
-import { type } from "os";
+type UserType = "admin" | "agent" | "user" | null;
 
 
 interface UserInfo {
     openid: string;
     session_key: string;
-    user_type?: string;
+    user_type?: UserType;
     organization?: {
         company: string;
         department: string;
@@ -14,7 +14,6 @@ interface UserInfo {
     };
 }
 
-type UserType = "admin" | "agent" | "user" | null;
 
 
 export type {

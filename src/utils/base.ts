@@ -1,5 +1,6 @@
 import { PathLike } from "fs";
 import { isObject } from "mushr";
+import { v4 } from "uuid";
 import metaTypeMapping from "../../meta"
 
 /**
@@ -93,10 +94,19 @@ function getMetaType(path: PathLike) {
     }
 }
 
+
+/**
+ * 返回UUID
+ */
+function createTransitionId() {
+    return v4();
+}
+
 export {
     hasProperties,
     objectStringSchema,
     objectToMongoUpdateSchema,
     extractObject,
-    getMetaType
+    getMetaType,
+    createTransitionId
 }

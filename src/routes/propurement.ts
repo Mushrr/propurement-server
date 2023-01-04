@@ -213,13 +213,16 @@ async function userChangeHandler(ctx: Context) {
         });
 
         if (propurementExist && userExist) {
+            console.log(req);
             const purchaseRecord: PurchaseRecord = {
                 uuid: req.uuid,
                 openid: req.openid,
                 transitionId: process.env.DEFAULT_ORDERID as string,
-                number: detail.number || 1,
+                propurename: req.propurename || "", 
+                number: detail.number,
                 unit: detail.unit || "个",
                 userComment: detail.comment || "",
+                state: "uncommitted"
             }
 
             // upload
@@ -231,16 +234,23 @@ async function userChangeHandler(ctx: Context) {
             const result = await itemsCollection.findOne(primaryKey);
 
             if (result) {
-                await itemsCollection.updateOne({
-                    ...primaryKey,
-                },{
-                    $set: objectToMongoUpdateSchema(purchaseRecord)   
-                })
-                ctx.body = {
-                    code: 200,
-                    message: ` ${objectStringSchema(primaryKey)} 物品订单更新成功！`
+                if (purchaseRecord.number === 0) {
+                    await itemsCollection.deleteOne(primaryKey); // 删除记录
+                    logger.info(`${ctx.request.ip} 删除了一条订单记录!`);
+                } else {
+                    await itemsCollection.updateOne({
+                        ...primaryKey,
+                    },{
+                        $set: objectToMongoUpdateSchema(purchaseRecord)   
+                    })
+                    ctx.body = {
+                        code: 200,
+                        message: ` ${objectStringSchema(primaryKey)} 物品订单更新成功！`
+                    }
+                    logger.info(`${ctx.request.ip} 更新了一条订单记录!`);
                 }
-                logger.info(`${ctx.request.ip} 更新了一条订单记录!`);
+
+
             } else {
                 await itemsCollection.insertOne({
                     ...purchaseRecord,
@@ -422,6 +432,40 @@ propurementRoute.post("/", async (ctx, next) => {
     )
 
     await next();
+})
+
+/**
+ * 从购物车中删除
+ * @param {string} uuid,
+ * @param {string} openid,
+ */
+propurementRoute.del("/", async (ctx, next) => {
+    const req = ctx.request.body || {};
+    const propurementCollection = await getCollection(ctx, "propurement");
+    if (req.openid && req.uuid) {
+        // 1. 删除订单
+        const ans = await propurementCollection.findOneAndDelete({
+            uuid: req.uuid,
+            openid: req.openid,
+            transitionId: process.env.DEFAULT_ORDERID
+        })
+        if (ans.ok) {
+            ctx.body = {
+                code: 200,
+                message: `对 ${req.uuid} 的删除操作成功`
+            }
+            logger.info(`用户 ${req.openid} 完成了 对 ${req.uuid} 的删除`);
+        } else {
+            ctx.body = {
+                code: 500,
+                message: "后台出现错误"
+            }
+            ctx.status = 500
+            logger.error("用户删除物品失败，可能是后台数据库出现错误，运行异常!");
+        }
+    }
+
+    await next()
 })
 
 export default propurementRoute;
