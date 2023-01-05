@@ -102,11 +102,21 @@ function createTransitionId() {
     return v4();
 }
 
+/**
+ * 判断一个字符串是否能够合法转化为日期 
+ * @param timeStr 时间字符串
+ * @returns 是否是合法字符串
+ */
+function timeValid(timeStr: string) {
+    const time = new Date(timeStr);
+    return !isNaN(time.getTime());
+}
 export {
     hasProperties,
     objectStringSchema,
     objectToMongoUpdateSchema,
     extractObject,
     getMetaType,
-    createTransitionId
+    createTransitionId,
+    timeValid
 }

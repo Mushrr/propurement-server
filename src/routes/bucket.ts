@@ -62,6 +62,9 @@ bucketRoute.post("/", async (ctx, next) => {
                 $set: {
                     transitionId: createTransitionId(),
                     state: "waiting"
+                },
+                $currentDate: {
+                    lastModified: true
                 }
             })
             ctx.body = {

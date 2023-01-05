@@ -22,7 +22,11 @@ adminUserRoute.get("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
         if (req.openid === process.env.ADMIN_OPENID) {
-            const query = extractObject(req, ["openid", "page", "pageSize"]);
+            const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid"]);
+
+            if (req.userOpenid) {
+                query['openid'] = req.userOpenid 
+            }
             const allUserCursor = userCollection.find(
                 query
             );

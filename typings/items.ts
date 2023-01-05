@@ -26,7 +26,7 @@ interface UserItemDetail {
 interface AgentItemDetail {
     unit: string, // 单位
     number: number,
-    agentPrice: number, // 代理给出的价格
+    price: number, // 代理给出的价格
     comment: GoodDocument | string | null,
 }
 

@@ -92,11 +92,10 @@ transitionRoute.post("/", async (ctx, next) => {
                 transitionId: req.transitionId,
                 ...req.query
             }, {
-                $set: {
-                    ...objectToMongoUpdateSchema(req.transition)
-                }
+                $set: objectToMongoUpdateSchema(req.transition)
             })
-            console.log(JSON.stringify(objectToMongoUpdateSchema(req.transition)));
+
+
             ctx.body = {
                 code: 200,
                 msg: "订单状态已更新"

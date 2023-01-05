@@ -1,3 +1,4 @@
+import { objectToMongoUpdateSchema } from '@utils/base';
 import { Db } from 'mongodb';
 import { Context } from 'koa';
 // User Route
@@ -25,7 +26,7 @@ userRoute.post("/", async (ctx: Context) => {
     // UserInfo
     const mongo = ctx.state.db as Db;
     const userCollection = mongo.collection("user");
-    
+
     if (hasProperties(ctx.request.body, ["session_key"])) {
         // 返回
         // 目前微信小程序已经不需要获取用户的个人信息了，可以直接通过open-data获得
@@ -75,14 +76,19 @@ userRoute.post("/", async (ctx: Context) => {
             data
         };
         // 保存用户信息
-        if (hasProperties(ctx.request.body, ["userInfo", "update"])) {
-            const wxUserInfo: UserInfo = ctx.request.body.userInfo;
-            if (ctx.request.body.update) {
-                // 更新用户信息
-                userCollection.findOneAndUpdate(
-                    { openid: wxUserInfo.openid },
-                    { $set: wxUserInfo }, // 更新UserInfo信息
-                )
+
+    } else if (hasProperties(ctx.request.body, ["userInfo", "update"])) {
+        const wxUserInfo: UserInfo = objectToMongoUpdateSchema(ctx.request.body.userInfo);
+        if (ctx.request.body.update) {
+            // 更新用户信息
+            userCollection.findOneAndUpdate(
+                { openid: wxUserInfo.openid },
+                { $set: wxUserInfo }, // 更新UserInfo信息
+            )
+            ctx.body = {
+                code: 200,
+                msg: "更新用户信息成功",
+                data: wxUserInfo
             }
         }
     } else {

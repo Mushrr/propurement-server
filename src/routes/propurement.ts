@@ -140,11 +140,16 @@ async function agentSearchHandler(ctx: Context) {
     if (hasProperties(req, ["openid"]) && isString(req.openid)) {
         const isUserValidate = await validateUser(req.openid as string, ctx);
         if (isUserValidate === "agent") {
-            const data = itemsCollection.find({
+            const data = []
+            const cursor = itemsCollection.find({
                 agentOpenid: req.openid,
                 state: "waiting"
                 // 分配给当前代理的所有正在等待的item
             })
+
+            for await (const item of cursor) {
+                data.push(item)
+            }
             ctx.body = {
                 code: 200,
                 message: "获取订单信息成功!",
@@ -318,13 +323,15 @@ async function agentChangeHandler(ctx: Context) {
     
                 if (transitionValidate) {
                     const agentReqDetail: AgentItemDetail = req.detail;
-                    if (isNumber(agentReqDetail.number) && isNumber(agentReqDetail.agentPrice)) {
+                    if (isNumber(agentReqDetail.number) && isNumber(agentReqDetail.price)) {
                         
                         // 1, 更新当前物品信息  
-                        const ans = await itemsCollection.findOneAndUpdate(transitionField, objectToMongoUpdateSchema({
-                            agentDetail: agentReqDetail,
-                            state: req.state
-                        }))
+                        const ans = await itemsCollection.findOneAndUpdate(transitionField, {
+                            $set: objectToMongoUpdateSchema({
+                                agentDetail: agentReqDetail,
+                                state: req.state
+                            })
+                        })
                         if (ans.ok) {
                             ctx.body = {
                                 code: 200,
@@ -338,12 +345,16 @@ async function agentChangeHandler(ctx: Context) {
                             // 是否存在
                             const ifExist = await propurementCollection.findOneAndUpdate({
                                 uuid: req.uuid,
-                                "agentPrices.agent": req.openid,
-                                "agentPrices.unit": req.detail.unit // 单位
+                                "agentPrice.agent": {
+                                    $elemMatch: {
+                                        agentOpenid: req.openid,
+                                        unit: agentReqDetail.unit
+                                    }
+                                }
                             }, {
-                                $set: objectToMongoUpdateSchema({
-                                    price: req.detail.price
-                                }, "agentPrices.$")
+                                $set: {
+                                    "agentPrice.agent.$.price": req.price
+                                }
                             })
                             // 不存在就添加
                             if (!ifExist.value?._id) {
@@ -351,7 +362,7 @@ async function agentChangeHandler(ctx: Context) {
                                     uuid: req.uuid,
                                 }, {
                                     $push: {
-                                        "agentPrice": {
+                                        "agentPrice.agent": {
                                             agent: req.openid,
                                             unit: req.detail.unit,
                                             price: req.detail.price, 
@@ -407,7 +418,7 @@ async function agentChangeHandler(ctx: Context) {
     } else {
         ctx.body = {
             code: 500,
-            message: "缺少必要元素: openid, uuid, transition, detail"
+            message: "缺少必要元素: openid, uuid, transitionId, detail"
         }
         ctx.status = 500;
     }

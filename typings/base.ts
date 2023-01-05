@@ -36,8 +36,13 @@ interface GoodDocument {
 
 type AnyFunc = (...args: any[]) => any;
 
+type AnyObject = {
+    [propName: string]: any
+}
+
 export {
     GoodDocument,
-    AnyFunc
+    AnyFunc,
+    AnyObject
 }
 
