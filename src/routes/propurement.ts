@@ -143,7 +143,7 @@ async function agentSearchHandler(ctx: Context) {
             const data = []
             const cursor = itemsCollection.find({
                 agentOpenid: req.openid,
-                state: "waiting"
+                state: req.state || "waiting"
                 // 分配给当前代理的所有正在等待的item
             })
 
@@ -323,13 +323,15 @@ async function agentChangeHandler(ctx: Context) {
     
                 if (transitionValidate) {
                     const agentReqDetail: AgentItemDetail = req.detail;
+                    console.log(agentReqDetail);
                     if (isNumber(agentReqDetail.number) && isNumber(agentReqDetail.price)) {
                         
                         // 1, 更新当前物品信息  
                         const ans = await itemsCollection.findOneAndUpdate(transitionField, {
                             $set: objectToMongoUpdateSchema({
                                 agentDetail: agentReqDetail,
-                                state: req.state
+                                state: req.state,
+                                number: agentReqDetail.number
                             })
                         })
                         if (ans.ok) {
@@ -342,37 +344,67 @@ async function agentChangeHandler(ctx: Context) {
     
                             //2. 修改 物品的代理人报价
     
-                            // 是否存在
-                            const ifExist = await propurementCollection.findOneAndUpdate({
+                            const ifExist = await (await propurementCollection).findOne({
                                 uuid: req.uuid,
                                 "agentPrice.agent": {
+                                    // 数组元素匹配的时候需要使用 $elemMatch
                                     $elemMatch: {
-                                        agentOpenid: req.openid,
+                                        agent: req.openid,
                                         unit: agentReqDetail.unit
                                     }
                                 }
-                            }, {
-                                $set: {
-                                    "agentPrice.agent.$.price": req.price
-                                }
                             })
-                            // 不存在就添加
-                            if (!ifExist.value?._id) {
-                                propurementCollection.updateOne({
+                            console.log(ifExist);
+                            if (ifExist) {
+                                logger.info("发现此价格，正在修改")
+                                const updateRes = await (await propurementCollection).updateOne({
                                     uuid: req.uuid,
+                                    "agentPrice.agent": {
+                                        $elemMatch: {
+                                            agent: req.openid,
+                                            unit: agentReqDetail.unit
+                                        }
+                                    }
+                                }, {
+                                    $set: {
+                                        "agentPrice.agent.$.price": agentReqDetail.price
+                                    }
+                                })
+                                if (updateRes.modifiedCount > 0) {
+                                    ctx.body = {
+                                        code: 200,
+                                        message: "修改成功"
+                                    }
+                                } else {
+                                    ctx.body = {
+                                        code: 500,
+                                        message: "修改失败"
+                                    }
+                                }
+                            } else {
+                                logger.info("没有发现此数据，正在添加")
+                                const updateRes = await (await propurementCollection).updateOne({
+                                    uuid: req.uuid
                                 }, {
                                     $push: {
                                         "agentPrice.agent": {
                                             agent: req.openid,
-                                            unit: req.detail.unit,
-                                            price: req.detail.price, 
+                                            price: agentReqDetail.price,
+                                            unit: agentReqDetail.unit
                                         }
                                     }
-                                }).then(() => {
-                                    logger.info(`代理 ${req.openid} 成功添加了 ${req.uuid} - ${req.detail.unit} - ${req.detail.price}`)
-                                }).catch(err => {
-                                    logger.error(err);
                                 })
+                                if (updateRes.modifiedCount > 0) {
+                                    ctx.body = {
+                                        code: 200,
+                                        message: "添加成功"
+                                    }
+                                } else {
+                                    ctx.body = {
+                                        code: 500,
+                                        message: "添加失败"
+                                    }
+                                }
                             }
     
                         } else {

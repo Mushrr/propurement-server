@@ -32,10 +32,20 @@ userRoute.post("/", async (ctx: Context) => {
         // 目前微信小程序已经不需要获取用户的个人信息了，可以直接通过open-data获得
         const session_key = ctx.request.body.session_key;
         const data = await userCollection.findOne({ session_key: session_key });
-        ctx.body = {
-            code: 200,
-            msg: "session_key 登入成功",
-            data
+        if (data) {
+            ctx.body = {
+                code: 200,
+                msg: "session_key 登入成功",
+                data
+            }
+        } else {
+            // session 过期
+            ctx.body = {
+                code: 400,
+                msg: "session_key 过期",
+                data: null
+            };
+            ctx.status = 400
         }
 
         logger.info("用户登入 获取到的session_key为: " + session_key);

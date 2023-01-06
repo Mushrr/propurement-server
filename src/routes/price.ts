@@ -1,5 +1,5 @@
 import logger from '@utils/logger';
-import { getCollection } from '@utils/fetchTools';
+import { getCollection, validateUser } from '@utils/fetchTools';
 import { hasProperties, extractObject } from '@utils/base';
 // 获取价格的路由
 
@@ -13,6 +13,7 @@ priceRoute.get("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     const propurementCollection = getCollection(ctx, 'propurement');
     if (hasProperties(req, ["page", "pageSize", "openid"])) {
+        const userValidate = await validateUser(req.openid as string, ctx);
         const query = extractObject(req, ["page", "pageSize", "openid"]);
         const page: number = req.page as number | undefined || 1;
         const pageSize: number = req.pageSize as number | undefined || 10;
@@ -41,11 +42,47 @@ priceRoute.get("/", async (ctx, next) => {
                 lastPrice: []
             }
             try {
-                if (propure.userPrice && Array.isArray(propure.userPrice.user)) {
-                    for (let price of propure.userPrice.user) {
-                        if (price.openid === req.openid) {
-                            dataSchema.lastPrice.push(price);
+                switch(userValidate) {
+                    case "user": {
+                        if (propure.userPrice && Array.isArray(propure.userPrice.user)) {
+                            for (const price of propure.userPrice.user) {
+                                if (price.openid === req.openid) {
+                                    dataSchema.lastPrice.push(price);
+                                }
+                            }
                         }
+                        break;
+                    }
+                    case "admin": {
+                        if (propure.userPrice && Array.isArray(propure.agentPrice.agent)) {
+                            for (const price of propure.agentPrice.agent) {
+                                if (price.agent === req.openid) {
+                                    dataSchema.lastPrice.push(price);
+                                }
+                            }
+                        }
+                        if (propure.userPrice && Array.isArray(propure.userPrice.user)) {
+                            for (const price of propure.userPrice.user) {
+                                if (price.openid === req.openid) {
+                                    dataSchema.lastPrice.push(price);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case "agent": {
+                        if (propure.userPrice && Array.isArray(propure.agentPrice.agent)) {
+                            for (const price of propure.agentPrice.agent) {
+                                if (price.agent === req.openid) {
+                                    dataSchema.lastPrice.push(price);
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        dataSchema.lastPrice = []
+                        break;
                     }
                 }
             } catch (err) {
