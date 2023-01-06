@@ -1,0 +1,27 @@
+input {
+    outline: none;
+    border: none;
+    width: 100%;
+    border-radius: 5px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+button {
+    outline: none;
+    border: none;
+    width: 100%;
+    border-radius: 5px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+
+::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+::-webkit-scrollbar-button {
+    width: 0.2rem;
+    height: 0.2rem;
+}
