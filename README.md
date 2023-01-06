@@ -10,4 +10,4 @@ procurement-server
   * language: typescript
   * UI framework: vue
   * UI Package: element-plus, Unocss
-  * 'note': very plain
+  * `note`: very plain
