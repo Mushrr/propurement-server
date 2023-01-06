@@ -1,7 +1,7 @@
-# propurement-server
-propurement-server
+# procurement-server
+procurement-server
 
-#### 一个采购平台
+#### A procurement platform
 * `main` branch
   * language: nodejs + typescript
   * database: mongodb
