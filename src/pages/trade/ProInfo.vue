@@ -12,8 +12,8 @@
                 </ElTag>
             </template>
             <template #default="scope" v-else-if="pro.label === '类别'">
-                <ElTag>
-                    {{ scope.row.category }}
+                <ElTag v-for="category in scope.row.category">
+                    {{ category }}
                 </ElTag>
             </template>
             <template #default="scope" v-else-if="pro.label === '单位'">
@@ -54,8 +54,8 @@
                     </ElTag>
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="类别">
-                    <ElTag>
-                        {{ currentPro.data.category }}
+                    <ElTag v-for="category in currentPro.data.category">
+                        {{ category }}
                     </ElTag>
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="单位">

@@ -158,20 +158,23 @@ function login() {
         // try login here TODO
         wait(loginButton.value!);
         request({
-            url: "/admin/login",
+            url: "/user",
             method: "POST",
             data: {
-                username: account.value,
+                phone: account.value,
                 password: password.value
             }
         }).then(res => {
             console.log(res);
-            ElMessage.success(`${account.value}登录成功，欢迎回来`);
+            ElMessage.success(`${res.data.data.organization.company}登录成功，欢迎回来`);
             cancelButtonWait(loginButton.value!);
             userState.updateUserState(res.data.data);
             router.push({
                 path: `/board`
             })
+        }).catch(err => {
+            ElMessage.error(err.response.data.message);
+            cancelButtonWait(loginButton.value!);
         })
     }
 }

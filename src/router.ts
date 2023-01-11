@@ -17,6 +17,12 @@ const routes = [
                 component: () => import("./pages/trade/UserInfo.vue")
             },
             {
+                path: "useradd",
+                name: "useradd",
+                title: "添加用户",
+                component: () => import("./pages/trade/UserAdd.vue")
+            },
+            {
                 path: "proinfo",
                 name: 'proinfo',
                 title: "产品信息",

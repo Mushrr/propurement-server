@@ -133,7 +133,6 @@
             </el-table-column>
             <el-table-column label="预计收益" v-if="state !== 'agent-refuse'">
                 <template #default="scope">
-
                     <div v-if="scope.row.agentDetail && scope.row.agentDetail.unit === scope.row.unit">
                         <div v-for="price in scope.row.lastPrice">
                             <template v-if="price.unit === scope.row.unit">
@@ -161,6 +160,18 @@
                     <div v-else>
                         <ElTag type="info">
                             给出的单位与代理人不一致，或者代理人信息缺失
+                        </ElTag>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column label="拒绝理由" v-if="state === 'agent-refuse'">
+                <template #default="scope">
+                    <div>
+                        <ElTag v-if="scope.row.agentDetail.comment">
+                            {{ scope.row.agentDetail.comment }}
+                        </ElTag>
+                        <ElTag v-else>
+                            无
                         </ElTag>
                     </div>
                 </template>
@@ -216,7 +227,6 @@
                     <el-form-item label="数量">
                         <el-input type="number" v-model="waitingData.number" placeholder="数量"></el-input>
                     </el-form-item>
-
                     <el-form-item label="提交">
                         <div class="flex flex-row">
                             <el-button type="success" @click="submit">提交</el-button>
@@ -449,7 +459,7 @@ function handleEdit(row) {
     waitingData.value.uuid = row.uuid;
     waitingData.value.openid = row.openid;
     waitingData.value.agentOpenid = row.agentOpenid || "",
-    waitingData.value.transitionId = row.transitionId;
+        waitingData.value.transitionId = row.transitionId;
     waitingData.value.number = row.number;
     waitingData.value.lastPrice = row.lastPrice;
     waitingData.value.state = row.state;

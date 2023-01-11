@@ -51,8 +51,8 @@
         </el-table-column>
         <el-table-column label="类别" width="100">
             <template #default="scope">
-                <ElTag v-if="scope.row.propurement">
-                    {{ scope.row.propurement.category }}
+                <ElTag v-if="scope.row.propurement" v-for="category in scope.row.propurement.category">
+                    {{ category }}
                 </ElTag>
             </template>
         </el-table-column>
@@ -440,7 +440,7 @@ async function extractAsExcel() {
         } else if (querySchema.value.start) {
             name = `交易记录-${querySchema.value.start}.xlsx`;
         }
-        
+
 
         if (querySchema.value.userOpenid) {
             name = `${data[0].buyer.organization.company}-${name}`

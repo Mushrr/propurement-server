@@ -22,6 +22,11 @@
                         未知
                     </el-tag>
                 </template>
+                <template #default="scope" v-if="col.label === '负责人'">
+                    <el-tag v-for="principal in scope.row.principals">
+                        {{ principal.name }} | {{ principal.phone }}
+                    </el-tag>
+                </template>
             </el-table-column>
         </template>
     </el-table>
@@ -56,13 +61,12 @@
                     {{ dialogData.data.organization.company }}
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="代理人">
-                    {{ dialogData.data.organization.principal }}
+                    <el-tag v-for="principal in dialogData.data.principals">
+                        {{ principal.name }} | {{ principal.phone }}
+                    </el-tag>
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="地址">
                     {{ dialogData.data.organization.position }}
-                </ElDescriptionsItem>
-                <ElDescriptionsItem label="电话">
-                    {{ dialogData.data.organization.phone_number }}
                 </ElDescriptionsItem>
             </ElDescriptions>
             <ElDescriptions title="历史价格">
@@ -83,8 +87,8 @@
                         </el-table-column>
                         <el-table-column prop="category" label="类别" width="100">
                             <template #default="scope">
-                                <el-tag type="success">
-                                    {{ scope.row.category }}
+                                <el-tag type="success" v-for="category in scope.row.category">
+                                    {{ category }}
                                 </el-tag>
                             </template>
                         </el-table-column>
@@ -152,19 +156,33 @@
                 <el-form-item label="公司">
                     <el-input v-model="changeData.organization.company" placeholder="请输入公司名称"></el-input>
                 </el-form-item>
-                <el-form-item label="代理人">
-                    <el-input v-model="changeData.organization.principal" placeholder="请输入代理人名称"></el-input>
-                </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="changeData.organization.position" placeholder="请输入地址"></el-input>
                 </el-form-item>
-                <el-form-item label="电话">
-                    <el-input v-model="changeData.organization.phone_number" placeholder="请输入电话"></el-input>
+                <el-form-item label="当前用户">
+                    <template class="grid grid-cols-2 mt-10" v-for="el, i in changeData.principals">
+                        <el-form label-width="200">
+                            <el-form-item label="用户名称">
+                                <el-input v-model="changeData.principals[i].name" placeholder="请输入名字"></el-input>
+                            </el-form-item>
+                            <el-form-item label="手机号(用来登录)">
+                                <el-input v-model="changeData.principals[i].phone" placeholder="请输入电话"></el-input>
+                            </el-form-item>
+                            <el-form-item label="密码">
+                                <el-input v-model="changeData.principals[i].password" placeholder="请输入密码"></el-input>
+                            </el-form-item>
+                            <el-form-item label="删除用户">
+                                <el-button type="danger" @click="deleteUser(i)">删除用户</el-button>
+                            </el-form-item>
+                        </el-form>
+                    </template>
+                    <el-button @click="addUser">添加一个新用户</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="changeUserData">提交</el-button>
                 </el-form-item>
             </el-form>
+            {{ changeData.principals }}
         </template>
     </el-dialog>
 </template>
@@ -187,15 +205,18 @@ type UserType = "admin" | "agent" | "user" | null;
 
 interface UserInfo {
     openid: string;
-    session_key: string;
     user_type?: UserType;
     organization?: {
         company: string;
         department: string;
         position: string;
-        phone_number: string;
         principal: string;
     };
+    principals: {
+        name: string,
+        phone: string,
+        password: string
+    }[]
 }
 
 let data: Ref<UserInfo[]> = ref([]);
@@ -218,12 +239,7 @@ const columns = [
         label: '地址'
     },
     {
-        prop: 'organization.principal',
-        label: "复杂人"
-    },
-    {
-        prop: 'organization.phone_number',
-        label: '电话号码'
+        label: "负责人"
     },
     {
         label: "修改"
@@ -293,12 +309,8 @@ function change(row) {
     // 在这里修改哦
     changeData.value.openid = row.openid;
     changeData.value.user_type = row.user_type;
-    changeData.value.session_key = row.session_key;
-    changeData.value.organization.company = row.organization.company;
-    changeData.value.organization.department = row.organization.department;
-    changeData.value.organization.position = row.organization.position;
-    changeData.value.organization.phone_number = row.organization.phone_number;
-    changeData.value.organization.principal = row.organization.principal;
+    changeData.value.organization = row.organization;
+    changeData.value.principals = Array.from(row.principals);
 
     open();
     console.log(row);
@@ -404,14 +416,19 @@ function changeUnit() {
 const changeData = ref({
     openid: "",
     user_type: "",
-    session_key: "",
     organization: {
         company: '',
         department: '',
         position: '',
-        phone_number: '',
         principal: ''
-    }
+    },
+    principals: [
+        {
+            name: "",
+            phone: "",
+            password: ""
+        }
+    ]
 })
 
 function changeUserData() {
@@ -420,7 +437,8 @@ function changeUserData() {
         '/admin/user',
         {
             openid: userState.openid,
-            userInfo: changeData.value
+            userInfo: changeData.value,
+            update: true
         }
     ).then(res => {
         console.log(res);
@@ -452,6 +470,22 @@ const filterFunc = () => {
             return e.name.indexOf(filterStr.value) !== -1;
         })
     }
+}
+
+
+
+// 删除用户
+
+function deleteUser(ind: number) {
+    changeData.value.principals.splice(ind, 1);
+}
+
+function addUser() {
+    changeData.value.principals.push({
+        name: "",
+        phone: "",
+        password: ""
+    })
 }
 </script>
 
