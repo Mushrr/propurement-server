@@ -20,7 +20,8 @@ transitionRoute.get("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     const itemsCollection = getCollection(ctx, "items");
     if (hasProperties(req, ["openid"])) {
-        if (req.openid === process.env.ADMIN_OPENID) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin") {
             const query = extractObject(req, ["openid", "page", "pageSize"]);
             const itemsCursor = (await itemsCollection).find(
                 query

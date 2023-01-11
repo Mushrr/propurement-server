@@ -1,3 +1,4 @@
+import { validateUser, getCollection, updateRatio } from '@utils/fetchTools';
 import { Timestamp } from 'mongodb';
 import { extractObject, hasProperties, objectToMongoUpdateSchema, objectStringSchema } from '@utils/base';
 import { Db } from 'mongodb';
@@ -21,7 +22,8 @@ adminPropurementRoute.get("/", async (ctx, next) => {
     const propurementCollection = db.collection("propurement");
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
-        if (process.env.ADMIN_OPENID === req.openid) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin") {
             const query = objectToMongoUpdateSchema(extractObject(req, ["openid", "page", "pageSize"]));
             const propurementCursor = propurementCollection.find(
                 query
@@ -85,7 +87,8 @@ adminPropurementRoute.post("/", async (ctx, next) => {
     const propurementCollection = db.collection("propurement");
     const req = ctx.request.body || {};
     if (hasProperties(req, ["openid"])) {
-        if (req.openid === process.env.ADMIN_OPENID) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin") {
             if (req.eventType === "add") {
                 const propurementErrorHandler = (addtionalInfo = "") => {
                     ctx.body = {
@@ -107,6 +110,10 @@ adminPropurementRoute.post("/", async (ctx, next) => {
                             ...excludePropurement, //  其他信息
                             lastChange: Timestamp.fromNumber(new Date().valueOf())
                         }
+                        updateRatio(ctx, propurement.defaultUnits, "unit");
+                        updateRatio(ctx, propurement.brand as string, "brand");
+                        updateRatio(ctx, propurement.category, "category");
+
                         const insertAns = await propurementCollection.insertOne(propurementSchema);
 
                         logger.info(`[${propurementSchema.name} | ${propurement.defaultUnits.join("|")}] 添加成功!`);
@@ -199,7 +206,8 @@ adminPropurementRoute.del("/", async (ctx, next) => {
     const propurementCollection = db.collection("propurement");
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
-        if (process.env.ADMIN_OPENID === req.openid) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin") {
             if (hasProperties(req, ["uuid"])) {
                 const ifExist = await propurementCollection.findOne({ uuid: req.uuid });
                 if (!ifExist) {
@@ -242,7 +250,6 @@ adminPropurementRoute.del("/", async (ctx, next) => {
         ctx.status = 400;
         logger.warn("物品删除失败，原因：用户未通过身份认证！！");
     }
-
     await next();
 })
 

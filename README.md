@@ -11,3 +11,7 @@ procurement-server
   * UI framework: vue
   * UI Package: element-plus, Unocss
   * `note`: very plain
+
+#### States
+
+![](screenshots/states.png)

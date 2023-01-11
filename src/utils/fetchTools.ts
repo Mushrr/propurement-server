@@ -1,3 +1,4 @@
+import { isString } from 'mushr';
 import { PurchaseRecord } from '@locTypes/items';
 import { UserType } from '@locTypes/user';
 import { Context } from 'koa';
@@ -106,10 +107,40 @@ async function validateTransition(transitionInfo: transitionBase, ctx: Context) 
     }
 }
 
+async function updateRatio(ctx: Context, units: string[] | string, name: "unit" | "brand" | "category") {
+    const collection = await getCollection(ctx, name);
+    if (isString(units)) {
+        const allUnits = await collection.find({}).toArray();
+        for (const unit of allUnits) {
+            if (unit[name] === units) {
+                return;
+            }
+        }
+        await collection.insertOne({ [name]: units });
+    } else if (Array.isArray(units)) {
+        const allUnits = await collection.find({}).toArray();
+        for (const unit of units) {
+            let exist = false;
+            for (const allUnit of allUnits) {
+                if (allUnit[name] === unit) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                await collection.insertOne({ [name]: unit });
+            }
+        }
+    }
+}
+
+
+
 export {
     getWxUserOpenid,
     getUserType,
     validateUser,
     getCollection,
-    validateTransition
+    validateTransition,
+    updateRatio
 }

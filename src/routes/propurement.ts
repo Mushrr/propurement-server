@@ -50,7 +50,7 @@ async function handler(
                 break;
             }
             case "user": {
-                await adminHandler(ctx);
+                await userHandler(ctx);
                 break;
             }
             case "agent": {
@@ -88,8 +88,20 @@ async function userSearchHandler(ctx: Context) {
     const propurementCollection = db.collection("propurement");
     const req = ctx.request.query || {};
     const query = extractObject(req, ["openid", "page", "pageSize"]);
+    
+    const finalQuery = extractObject(query, ['category', 'unit'])
+
+    if (query.category) {
+        finalQuery.category = {
+            $elemMatch: {
+                $eq: query.category
+            }
+        }
+    }
+
+
     const propurementCursor = propurementCollection.find(
-        query
+        finalQuery
     );
     const propurementData = [];
     const page: number = req.page as number | undefined || 1;
@@ -174,7 +186,6 @@ async function agentSearchHandler(ctx: Context) {
  * @param {string} query 其他搜索信息
  */
 propurementRoute.get("/", async (ctx, next) => {
-
     await handler(
         ctx.request.query, 
         userSearchHandler, 
@@ -254,8 +265,6 @@ async function userChangeHandler(ctx: Context) {
                     }
                     logger.info(`${ctx.request.ip} 更新了一条订单记录!`);
                 }
-
-
             } else {
                 await itemsCollection.insertOne({
                     ...purchaseRecord,
@@ -331,7 +340,8 @@ async function agentChangeHandler(ctx: Context) {
                             $set: objectToMongoUpdateSchema({
                                 agentDetail: agentReqDetail,
                                 state: req.state,
-                                number: agentReqDetail.number
+                                number: agentReqDetail.number,
+                                unit: agentReqDetail.unit
                             })
                         })
                         if (ans.ok) {

@@ -1,8 +1,10 @@
+import { v4 } from 'uuid';
+import { validateUser } from '@utils/fetchTools';
 import { Db } from 'mongodb';
 // 管理员 对 user 的权限
 
 import Route from "koa-router";
-import { extractObject, hasProperties, objectStringSchema, objectToMongoUpdateSchema } from '@utils/base';
+import { extractObject, hasProperties, objectStringSchema, objectToMongoUpdateSchema, timePlus, Week, isSuperAdmin } from '@utils/base';
 import logger from '@utils/logger';
 import { UserInfo } from '@locTypes/user';
 
@@ -21,7 +23,8 @@ adminUserRoute.get("/", async (ctx, next) => {
     const userCollection = db.collection("user");
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
-        if (req.openid === process.env.ADMIN_OPENID) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin" || isSuperAdmin(req.openid as string)) {
             const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid"]);
 
             if (req.userOpenid) {
@@ -76,39 +79,173 @@ adminUserRoute.get("/", async (ctx, next) => {
  * @param: userInfo 需要修改的用户信息, 在这里可以修改用户的类别
  */
 adminUserRoute.post("/", async (ctx, next) => {
-    const req = ctx.request.body || {};
-    const db = ctx.state.db as Db;
-    const userCollection = db.collection("user");
-    console.log(req);
-    if (hasProperties(req, ["openid", "userInfo"])) {
-        const userInfo = req.userInfo as UserInfo;
-        if (req.openid === process.env.ADMIN_OPENID) {
-            if (await userCollection.findOne({ openid: userInfo.openid })) {
-                const updateData = objectToMongoUpdateSchema(userInfo);
-                userCollection.findOneAndUpdate(
-                    { openid: userInfo.openid },
-                    { $set: updateData }
-                ); // update
+    // UserInfo
+    const mongo = ctx.state.db as Db;
+    const userCollection = mongo.collection("user");
+
+    if (hasProperties(ctx.request.body, ["session_key"])) {
+        // 返回
+        // 目前微信小程序已经不需要获取用户的个人信息了，可以直接通过open-data获得
+        const session_key = ctx.request.body.session_key;
+        const data = await userCollection.findOne({
+            "principals": {
+                $elemMatch: {
+                    "session_key": session_key,
+                }
+            }
+        });
+
+        if (data) {
+            ctx.body = {
+                code: 200,
+                msg: "session_key 登入成功",
+                data
+            }
+            logger.info("用户登入 获取到的session_key为: " + session_key);
+        } else {
+            // session 过期
+            ctx.body = {
+                code: 400,
+                msg: "session_key 过期",
+                data: null
+            };
+            ctx.status = 400
+            logger.warn("用户的session_key: " + session_key + "已经过期");
+        }
+
+
+    } else if (hasProperties(ctx.request.body, ["create", "openid"])) {
+        const req = ctx.request.body;
+        const userValidate = await validateUser(req.openid, ctx);
+        if (userValidate === "admin" || isSuperAdmin(req.openid)) {
+            const userInfo = req.userInfo as UserInfo || {};
+
+            // 检查必须的资料
+            if (userInfo.organization && userInfo.organization?.company) {
+                const data = userInfo;
+                if (!data.openid) {
+                    data.openid = v4(); // 使用uuid 随机创建一个
+                }
+                userCollection.insertOne(data);
+                logger.info(`管理员添加用户成功  ${userInfo.organization.company}`);
                 ctx.body = {
                     code: 200,
-                    message: `用户 ${userInfo.openid} 修改成功, ${objectStringSchema(updateData)}`
+                    message: "添加了一个新用户"
                 }
-                logger.info(ctx.body.message);
             } else {
                 ctx.body = {
-                    code: 404,
-                    message: `用户 ${userInfo.openid} 不存在,请仔细核实!`
+                    code: 500,
+                    message: "您填写的信息中存在确实，必须填写 公司名称"
                 }
-                ctx.status = 404;
+                ctx.status = 500;
+                logger.warn("在添加用户时填写的信息有缺失")
             }
+
+
         } else {
             ctx.body = {
                 code: 400,
-                message: "您没有权限, 请与管理员联系",
+                message: "您无权创建用户，请联系管理员创建"
+            }
+        }
+    } else if (hasProperties(ctx.request.body, ["update", "openid"])) {
+        const req = ctx.request.body;
+        const userInfo = req.userInfo as UserInfo || {};
+        const userValidate = await validateUser(req.openid, ctx);
+        if (userValidate === "admin" || isSuperAdmin(req.openid)) {
+
+            const basicData = extractObject(userInfo, ["principals"]);
+            const principals = userInfo.principals || [];
+
+            // 一次性更新.
+            const data = await userCollection.findOneAndUpdate({
+                openid: userInfo.openid
+            }, {
+                $set: {
+                    principals: principals,
+                    ...objectToMongoUpdateSchema(basicData)
+                }
+            })
+
+            if (data.ok) {
+                ctx.body = {
+                    code: 200,
+                    message: "修改成功",
+                }
+                logger.info(`管理员修改用户openid为:${basicData.openid}成功`);
+            } else {
+                ctx.body = {
+                    code: 500,
+                    message: "修改失败, Mongodb 出现错误"
+                }
+                ctx.status = 500;
+                logger.error(`管理员修改用户openid为:${basicData.openid} 遇到了Mongodb 错误`);
+            }
+
+        } else {
+            ctx.body = {
+                code: 400,
+                message: "您无权修改用户，请联系管理员修改"
             }
             ctx.status = 400;
-            logger.warn(`用户 ${req.openid} 正在尝试获取用户信息!`);
         }
+    } else if (hasProperties(ctx.request.body, ["phone", "password"])) {
+
+        await userCollection.findOneAndUpdate({
+            "principals": {
+                $elemMatch: {
+                    "phone": ctx.request.body.phone,
+                    "password": ctx.request.body.password
+                }
+            }
+        }, {
+            $set: {
+                // 生成一个sessionkey
+                "principals.$.session_key": v4(),
+                "principals.$.expired": timePlus(new Date(), Week).toISOString()
+            }
+        })
+
+        const data = await userCollection.findOne({
+            "principals": {
+                $elemMatch: {
+                    "phone": ctx.request.body.phone,
+                    "password": ctx.request.body.password
+                }
+            }
+        })
+
+        if (data?._id) {
+
+            const ans = extractObject(data, ["principals"]);
+
+            for (const pair of data.principals) {
+                if (pair.phone === ctx.request.body.phone &&
+                    pair.password === ctx.request.body.password) {
+                        ans.userInfo = pair
+                }
+            }
+
+            ctx.body = {
+                code: 200,
+                message: "登录成功",
+                data: ans
+            }
+        } else {
+            ctx.body = {
+                code: 404,
+                message: "您的账户不存在，请联系管理员"
+            };
+            ctx.status = 404;
+        }
+
+    } else {
+        ctx.body = {
+            code: 400,
+            msg: "缺少必要参数, 请核实您要进行的服务类型后再操作"
+        }
+        logger.warn("缺少必要参数, 请核实您要进行的服务类型后再操作");
+        ctx.status = 400;
     }
     await next();
 })
@@ -124,7 +261,8 @@ adminUserRoute.del("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid", "userOpenid"])) {
         const userOpenid = req.userOpenid;
-        if (req.openid === process.env.ADMIN_OPENID) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin" || isSuperAdmin(req.openid)) {
             userCollection.findOneAndDelete({ openid: userOpenid });
             ctx.body = {
                 code: 200,

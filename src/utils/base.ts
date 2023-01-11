@@ -111,6 +111,25 @@ function timeValid(timeStr: string) {
     const time = new Date(timeStr);
     return !isNaN(time.getTime());
 }
+
+
+const Week = 7 * 24 * 60 * 60;
+const ms = 1000;
+
+function timePlus(start: Date, delta: number) {
+    return new Date(start.getTime() + delta * ms);
+}
+
+
+/**
+ * 判断是否是超级用户
+ * @param openid Openid
+ */
+function isSuperAdmin(openid: string) {
+    return process.env.ADMIN_OPENID === openid;
+}
+
+
 export {
     hasProperties,
     objectStringSchema,
@@ -118,5 +137,8 @@ export {
     extractObject,
     getMetaType,
     createTransitionId,
-    timeValid
+    timeValid,
+    Week,
+    timePlus,
+    isSuperAdmin
 }

@@ -6,6 +6,13 @@ const agentStates = [
     "agent-refuse"
 ] 
 
+const ratioCollections = [
+    "unit",
+    "brand",
+    "category"
+]
+
 export {
-    agentStates
+    agentStates,
+    ratioCollections
 }

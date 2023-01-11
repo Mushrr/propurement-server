@@ -7,6 +7,7 @@ import propurementRoute from '@routes/propurement';
 import bucketRoute from '@routes/bucket';
 import historyRoute from '@routes/history';
 import priceRoute from '@routes/price';
+import ratioRoute from '@routes/ratio';
 
 const router = new Router()
 
@@ -16,6 +17,7 @@ router.use("/propurement", propurementRoute.routes(), propurementRoute.allowedMe
 router.use("/bucket", bucketRoute.routes(), bucketRoute.allowedMethods());
 router.use("/history", historyRoute.routes(), historyRoute.allowedMethods());
 router.use("/price", priceRoute.routes(), priceRoute.allowedMethods());
+router.use("/ratio", ratioRoute.routes(), ratioRoute.allowedMethods());
 
 
 export default router

@@ -35,6 +35,7 @@ adminLoginRoute.post("/", async (ctx, next) => {
         }
         ctx.status = 400;
     }
+    await next();
 })
 
 export default adminLoginRoute;
