@@ -41,6 +41,12 @@ const routes = [
                 component: () => import("./pages/trade/TradeInfo.vue")
             },
             {
+                path: "tradeadd",
+                name: "tradeadd",
+                title: "订单添加",
+                component: () => import("./pages/trade/TradeAdd.vue")
+            },
+            {
                 path: "gethistory",
                 name: 'gethistory',
                 title: "历史信息",

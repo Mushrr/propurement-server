@@ -8,6 +8,7 @@
             <el-radio-button label="agent-accept">代理人已接受</el-radio-button>
             <el-radio-button label="agent-refuse">代理人已拒绝</el-radio-button>
             <el-radio-button label="distributing">正在配发中</el-radio-button>
+            <el-radio-button label="user-refuse">用户拒收</el-radio-button>
             <el-radio-button label="finished">完成</el-radio-button>
         </el-radio-group>
     </div>
@@ -74,7 +75,7 @@
         </el-table>
     </div>
     <div
-        v-else-if="state === 'agent-accept' || state === 'agent-refuse' || state === 'distributing' || state === 'finished'">
+        v-else-if="state === 'agent-accept' || state === 'agent-refuse' || state === 'distributing' || state === 'finished' || state === 'user-refuse'">
         <el-table :data="data">
             <el-table-column label="交易单号" prop="transitionId"></el-table-column>
             <el-table-column label="商品名称" prop="propurename"></el-table-column>
@@ -192,7 +193,7 @@
             <!-- 1. 如果当前是代理人未受理的状态，代理人价格没下来，所以此时只委派就行 -->
             <template v-if="
                 state === 'waiting' || state === 'agent-accept' || state === 'agent-refuse' ||
-                state === 'distributing' || state === 'finished'
+                state === 'distributing' || state === 'finished' || state === 'user-refuse'
             ">
                 <el-form :model="waitingData">
                     <el-form-item v-model="waitingData.openid" label="微信Openid">
@@ -263,7 +264,7 @@ interface PurchaseRecord {
     openid: string, // 用户的openid
     number: number, // 购买的数量
     unit: string, // 在这里被指定，后台选择单位后，转发到指定代理处
-    state?: "uncommitted" | "waiting" | "agent-accept" | "agent-refuse" | "distributing" | "finished"
+    state?: "uncommitted" | "waiting" | "agent-accept" | "agent-refuse" | "distributing" | "user-refuse" | "finished"
     agentOpenid?: string, // 指定代理人的openid
     userComment?: string, // 用户的评价
     agentComment?: string, // 代理人的评价
@@ -590,6 +591,10 @@ const stateInfo = ref([
     {
         value: "distributing",
         label: "正在配发"
+    },
+    {
+        value: "user-refuse",
+        label: "用户拒绝"
     },
     {
         value: "finished",

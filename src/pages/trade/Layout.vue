@@ -40,7 +40,7 @@
             </ElCard>
         </div>
         <div class="ml-200px h-1000px">
-            <div class="flex flex-row items-center p-2">
+            <div class="z-99 flex flex-row items-center p-2">
                 <span class="i-carbon-car"></span>
                 <Transition name="route-change">
                     <el-breadcrumb class="font-mono font-bold text-3xl">
