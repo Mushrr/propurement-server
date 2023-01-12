@@ -9,7 +9,7 @@ interface PurchaseRecord {
     openid: string, // 用户的openid
     number: number, // 购买的数量
     unit: string, // 在这里被指定，后台选择单位后，转发到指定代理处
-    state?: "uncommitted" | "waiting" | "agent-accept" | "agent-refuse" | "distributing" | "finished"
+    state?: "uncommitted" | "waiting" | "agent-accept" | "agent-refuse" | "distributing" | "user-refuse" | "finished"
     agentOpenid?: string, // 指定代理人的openid
     userComment?: GoodDocument | string, // 用户的评价
     agentComment?: GoodDocument | string, // 代理人的评价

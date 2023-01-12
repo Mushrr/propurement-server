@@ -193,7 +193,6 @@ propurementRoute.get("/", async (ctx, next) => {
         agentSearchHandler, 
         ctx
     );
-
     await next();
 })
 

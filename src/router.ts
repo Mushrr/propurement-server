@@ -8,6 +8,7 @@ import bucketRoute from '@routes/bucket';
 import historyRoute from '@routes/history';
 import priceRoute from '@routes/price';
 import ratioRoute from '@routes/ratio';
+import transitionRoute from '@routes/transition';
 
 const router = new Router()
 
@@ -18,6 +19,7 @@ router.use("/bucket", bucketRoute.routes(), bucketRoute.allowedMethods());
 router.use("/history", historyRoute.routes(), historyRoute.allowedMethods());
 router.use("/price", priceRoute.routes(), priceRoute.allowedMethods());
 router.use("/ratio", ratioRoute.routes(), ratioRoute.allowedMethods());
+router.use("/transition", transitionRoute.routes(), transitionRoute.allowedMethods());
 
 
 export default router
