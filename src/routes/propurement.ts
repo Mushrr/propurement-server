@@ -216,7 +216,6 @@ async function userChangeHandler(ctx: Context) {
     const propurementCollection = db.collection("propurement");
     const userCollection = db.collection("user");
     const req = ctx.request.body || {};
-
     if (hasProperties(req, ["openid", "uuid", "detail"])) {
         const detail: UserItemDetail = isObject(req.detail) ? req.detail : {};
         
@@ -237,8 +236,13 @@ async function userChangeHandler(ctx: Context) {
                 number: detail.number,
                 unit: detail.unit || "个",
                 userComment: detail.comment || "",
-                state: "uncommitted"
+                state: "uncommitted",
+                isFree: false // 默认是false，并非是免配送的
             }
+            if (detail.isFree) {
+                purchaseRecord.isFree = Boolean(detail.isFree);
+            }
+
 
             // upload
             const primaryKey = {
@@ -474,7 +478,7 @@ async function agentChangeHandler(ctx: Context) {
  * @description 用户将会在这里插入订单，这个订单将会在购物车中，等待代理的处理, 如果不是则直接更新订单
  */
 propurementRoute.post("/", async (ctx, next) => {
-
+    console.log(ctx.request.body);
     await handler(
         ctx.request.body,
         userChangeHandler,
@@ -492,11 +496,11 @@ propurementRoute.post("/", async (ctx, next) => {
  * @param {string} openid,
  */
 propurementRoute.del("/", async (ctx, next) => {
-    const req = ctx.request.body || {};
-    const propurementCollection = await getCollection(ctx, "propurement");
+    const req = ctx.request.query || {};
+    const itemCollection = await getCollection(ctx, "items");
     if (req.openid && req.uuid) {
         // 1. 删除订单
-        const ans = await propurementCollection.findOneAndDelete({
+        const ans = await itemCollection.findOneAndDelete({
             uuid: req.uuid,
             openid: req.openid,
             transitionId: process.env.DEFAULT_ORDERID
