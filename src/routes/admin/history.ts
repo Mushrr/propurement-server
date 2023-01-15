@@ -34,8 +34,12 @@ historyRoute.get('/', async (ctx, next) => {
             if (req.end && timeValid(req.start as string)) {
                 query['lastModified'].$lte = new Date(req.end as string);
             }
-            
+
             query.state = req.state as string || 'finished';
+
+            if (hasProperties(query, ['isFree'])) {
+                query.isFree = query.isFree === "true" || false
+            }
 
             let ind = 0;
             const start = (page - 1) * pageSize;
