@@ -14,6 +14,13 @@
                     :value="agent.openid"></el-option>
             </el-select>
         </el-form-item>
+        <el-form-item label="是否是免配送">
+            <el-select v-model="querySchema.isFree">
+                <el-option key="" label="未选择" :value="''"></el-option>
+                <el-option key="true" label="是" :value="true"></el-option>
+                <el-option key="false" label="否" :value="false"></el-option>
+            </el-select>
+        </el-form-item>
         <el-form-item label="开始时间">
             <el-date-picker v-model="querySchema.start" type="datetime" value-format="YYYY-MM-DD HH:mm:ss"
                 placeholder="选择日期时间"></el-date-picker>
@@ -104,6 +111,16 @@
                 </ElTag>
             </template>
         </el-table-column>
+        <el-table-column label="免配送订单">
+            <template #default="scope">
+                <ElTag v-if="scope.row.isFree" type="danger">
+                    免配送
+                </ElTag>
+                <ElTag v-else>
+                    正常配送
+                </ElTag>
+            </template>
+        </el-table-column>
         <el-table-column label="购买时间">
             <template #default="scope">
                 <ElTag>
@@ -178,6 +195,7 @@ interface QuerySchema {
     start?: string;
     end?: string;
     category?: string;
+    isFree?: boolean
 }
 
 interface PurchaseRecord {
@@ -220,6 +238,7 @@ watch(querySchema.value, (newVal, oldVal) => {
         }
     }
 
+    console.log(queryObj);
     request.get(
         '/admin/history',
         {

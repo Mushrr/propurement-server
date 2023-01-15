@@ -60,6 +60,9 @@
                 <ElDescriptionsItem label="公司">
                     {{ dialogData.data.organization.company }}
                 </ElDescriptionsItem>
+                <ElDescriptionsItem label="部门">
+                    {{ dialogData.data.organization.department }}
+                </ElDescriptionsItem>
                 <ElDescriptionsItem label="代理人">
                     <el-tag v-for="principal in dialogData.data.principals">
                         {{ principal.name }} | {{ principal.phone }}
@@ -155,6 +158,9 @@
                 </el-form-item>
                 <el-form-item label="公司">
                     <el-input v-model="changeData.organization.company" placeholder="请输入公司名称"></el-input>
+                </el-form-item>
+                <el-form-item label="部门">
+                    <el-input v-model="changeData.organization.department" placeholder="请输入部门名称"></el-input>
                 </el-form-item>
                 <el-form-item label="地址">
                     <el-input v-model="changeData.organization.position" placeholder="请输入地址"></el-input>

@@ -63,7 +63,18 @@
                     </div>
                 </template>
             </el-table-column>
-
+            <el-table-column label="免配送">
+                <template #default="scope">
+                    <div>
+                        <el-tag v-if="scope.row.isFree" type="danger">
+                            免配送
+                        </el-tag>
+                        <el-tag v-else>
+                            正常配送
+                        </el-tag>
+                    </div>
+                </template>
+            </el-table-column>
             <el-table-column label='编辑'>
                 <template #default="scope">
                     <div class="flex flex-row">
@@ -177,6 +188,18 @@
                     </div>
                 </template>
             </el-table-column>
+            <el-table-column label="免配送">
+                <template #default="scope">
+                    <div>
+                        <el-tag v-if="scope.row.isFree" type="danger">
+                            免配送
+                        </el-tag>
+                        <el-tag v-else>
+                            正常配送
+                        </el-tag>
+                    </div>
+                </template>
+            </el-table-column>
             <el-table-column label='编辑'>
                 <template #default="scope">
                     <div class="flex flex-row">
@@ -201,6 +224,15 @@
                     </el-form-item>
                     <el-form-item v-model="waitingData.transitionId" label="订单号">
                         <el-input v-model="waitingData.transitionId" placeholder="微信Openid" disabled></el-input>
+                    </el-form-item>
+
+                    <el-form-item label="是否是免配送">
+                        <el-tag v-if="waitingData.isFree" type="danger">
+                            免配送
+                        </el-tag>
+                        <el-tag v-else>
+                            正常配送
+                        </el-tag>
                     </el-form-item>
                     <el-form-item label="代理人选择">
                         <el-select v-model="waitingData.agentOpenid">
@@ -438,6 +470,7 @@ const waitingData = ref({
     state: "",
     price: 0,
     agentOpenid: "",
+    isFree: false,
     lastPrice: [{
         openid: "",
         unit: "",
@@ -464,6 +497,8 @@ function handleEdit(row) {
     waitingData.value.number = row.number;
     waitingData.value.lastPrice = row.lastPrice;
     waitingData.value.state = row.state;
+    waitingData.value.isFree = row.isFree || false;
+
     currentData.value.info_type = "edit";
     changePrice()
     getCurrentPropurement(row.uuid);
