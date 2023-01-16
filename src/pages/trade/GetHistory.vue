@@ -35,6 +35,13 @@
         <el-form-item label="页大小">
             <el-input type="number" v-model="pageSize"></el-input>
         </el-form-item>
+        <el-form-item label="表格类型">
+            <el-select v-model="querySchema.excelType">
+                <el-option key="1" label="月数据" value="月数据" default></el-option>
+                <el-option key="2" label="表单" value="表单"></el-option>
+                <el-option key="3" label="财务系统表" value="财务系统表"></el-option>
+            </el-select>
+        </el-form-item>
         <el-form-item label="导出Excel">
             <el-button @click="extractAsExcel">导出</el-button>
         </el-form-item>
@@ -144,6 +151,8 @@ import {
 import { Ref, ref, watch } from 'vue'
 import request from '../../request';
 import * as xlsx from 'xlsx'
+import monthSummaryExcel from '../../excel/monthSummaryExcel';
+import monthGroupExcel from '../../excel/monthGroupExcel';
 
 type UserType = "admin" | "agent" | "user" | null;
 
@@ -195,7 +204,8 @@ interface QuerySchema {
     start?: string;
     end?: string;
     category?: string;
-    isFree?: boolean
+    isFree?: boolean,
+    excelType: "月数据" | "表单" | "财务系统表"
 }
 
 interface PurchaseRecord {
@@ -231,7 +241,7 @@ watch(querySchema.value, (newVal, oldVal) => {
     pageIndex.value = 1; // 重置
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value === '') {
+        if (value === '' || key === 'excelType') {
             continue;
         } else {
             queryObj[key] = value;
@@ -272,7 +282,7 @@ request.get(
 watch(pageIndex, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value === '') {
+        if (value === '' || key === 'excelType') {
             continue;
         } else {
             queryObj[key] = value;
@@ -381,48 +391,20 @@ watch(() => data.value, async (newVal, oldVal) => {
 })
 
 function exportExcel(data: any, name: string) {
-    const workbook = xlsx.utils.book_new();
-
-    const sheetData = data.map((el: any) => {
-        return {
-            "交易单号": el.transitionId,
-            "购买者": `${el.buyer.organization.company}(${el.buyer.organization.principal})`,
-            "商品名称": el.propurename,
-            "商品类型": el.propurement.category,
-            "单位": el.unit,
-            "数量": el.number,
-            "价格": `${el.price}￥/${el.unit}`,
-            "购买时间": new Date(el.lastModified).toLocaleString()
-        }
-    })
-    type AnyObject = {
-        [prop: string]: any
+    let book = null;
+    switch(querySchema.value.excelType) {
+        case "月数据":
+            book = monthSummaryExcel(data);
+            xlsx.writeFileXLSX(book, `${name}`);
+            break;
+        case "财务系统表":
+            book = monthGroupExcel(data);
+            xlsx.writeFileXLSX(book, `${name}`);
+            break;
+        default:
+            ElMessage("请选择导出表格的类型");
+            break 
     }
-
-    const base: AnyObject = {};
-
-    for (const key of Object.keys(sheetData[0])) {
-        base[key] = 0;
-    }
-
-    for (const row of sheetData) {
-        for (const key of Object.keys(row)) {
-            // @ts-ignore
-            base[key] = Math.max(base[key], row[key].toString().length, key.length) * 1.1;
-        }
-    }
-    const columns = []
-
-    for (const key of Object.keys(base)) {
-        columns.push({
-            wch: base[key]
-        })
-    }
-    const sheet = xlsx.utils.json_to_sheet(sheetData);
-    sheet["!cols"] = columns;
-
-    xlsx.utils.book_append_sheet(workbook, sheet);
-    xlsx.writeFileXLSX(workbook, `${name}`);
 }
 
 
@@ -430,15 +412,15 @@ function exportExcel(data: any, name: string) {
 async function extractAsExcel() {
     const query: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value !== '') {
+        console.log(key);
+        if (value !== '' && key !== 'excelType') {
             query[key] = value;
         }
     }
 
     let page = 1;
     let data = [];
-    do {
-        const res = await request.get(
+    const res = await request.get(
             '/admin/history',
             {
                 params: {
@@ -450,6 +432,8 @@ async function extractAsExcel() {
             }
         );
         data = res.data.data;
+    while (data.length !== 0) {
+        
         for (const item of data) {
             await bindItemData(item);
         }
@@ -466,7 +450,20 @@ async function extractAsExcel() {
         }
         await exportExcel(data, name);
         page++;
-    } while (data.length !== 0);
+
+
+        data = (await request.get(
+            '/admin/history',
+            {
+                params: {
+                    openid: userState.openid,
+                    page: page,
+                    pageSize: pageSize.value,
+                    ...query
+                }
+            }
+        )).data.data;
+    }
 }
 
 
