@@ -1,7 +1,7 @@
 import monthDaySummary from "./monthDaySummary";
 import monthGroupBy from "./monthGroupBy";
 import monthSummary from "./monthSummary";
-import xhyTrade from "./trade/xy";
+import xhyTrade, { xhyStyle } from "./trade/xy";
 import { HistoryData } from "./typings";
 import * as XLSX from 'xlsx'
 import monthSummaryExcel from "./monthSummaryExcel";
@@ -13,9 +13,11 @@ export {
     monthGroupBy,
     monthSummary,
     xhyTrade,
+    xhyStyle,
     XLSX,
     monthSummaryExcel,
-    monthGroupExcel
+    monthGroupExcel,
+    
 }
 
 export type {

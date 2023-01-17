@@ -42,6 +42,11 @@
                 <el-option key="3" label="财务系统表" value="财务系统表"></el-option>
             </el-select>
         </el-form-item>
+        <el-form-item label="发票单位">
+            <el-select v-model="querySchema.company">
+                <el-option key="1" label="溪河源农业开发有限公司" value="溪河源农业开发有限公司"></el-option>
+            </el-select>
+        </el-form-item>
         <el-form-item label="导出Excel">
             <el-button @click="extractAsExcel">导出</el-button>
         </el-form-item>
@@ -153,6 +158,8 @@ import request from '../../request';
 import * as xlsx from 'xlsx'
 import monthSummaryExcel from '../../excel/monthSummaryExcel';
 import monthGroupExcel from '../../excel/monthGroupExcel';
+import save from '../../excel/save';
+import { xhyTrade, XLSX, xhyStyle } from '../../excel/excel';
 
 type UserType = "admin" | "agent" | "user" | null;
 
@@ -169,7 +176,7 @@ interface UserInfo {
     };
 }
 const userState = useUser();
-const pageSize = ref(10);
+const pageSize = ref(13);
 
 const userInfo: Ref<UserInfo[]> = ref([]);
 const agentInfo: Ref<UserInfo[]> = ref([]);
@@ -205,6 +212,7 @@ interface QuerySchema {
     end?: string;
     category?: string;
     isFree?: boolean,
+    company: string,
     excelType: "月数据" | "表单" | "财务系统表"
 }
 
@@ -241,7 +249,7 @@ watch(querySchema.value, (newVal, oldVal) => {
     pageIndex.value = 1; // 重置
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value === '' || key === 'excelType') {
+        if (value === '' || key === 'excelType' || key === 'company') {
             continue;
         } else {
             queryObj[key] = value;
@@ -282,7 +290,7 @@ request.get(
 watch(pageIndex, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value === '' || key === 'excelType') {
+        if (value === '' || key === 'excelType' || key === 'company') {
             continue;
         } else {
             queryObj[key] = value;
@@ -390,19 +398,33 @@ watch(() => data.value, async (newVal, oldVal) => {
     }
 })
 
-function exportExcel(data: any, name: string) {
+function exportExcel(data: any, name: string, page: number) {
     let book = null;
     switch(querySchema.value.excelType) {
         case "月数据":
             book = monthSummaryExcel(data);
-            xlsx.writeFileXLSX(book, `${name}`);
+            save(book, `${name}`);
+            break;
+        case "表单":
+            if (querySchema.value.company) {
+                const arrayData = xhyTrade(data, 1, page, new Date(data[0].lastModified), querySchema.value.company, '杨秀珍');
+                const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
+                const book = XLSX.utils.book_new();
+                
+                XLSX.utils.book_append_sheet(book, sheet, '订单');
+
+                save(book, `${name}`);
+            } else {
+                ElMessage.error("请选择开票单位");
+            }
             break;
         case "财务系统表":
             book = monthGroupExcel(data);
-            xlsx.writeFileXLSX(book, `${name}`);
+            save(book, `${name}`);
+            ElMessage.success('导出成功');
             break;
         default:
-            ElMessage("请选择导出表格的类型");
+            ElMessage.warning("请选择导出表格的类型");
             break 
     }
 }
@@ -413,7 +435,7 @@ async function extractAsExcel() {
     const query: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         console.log(key);
-        if (value !== '' && key !== 'excelType') {
+        if (value !== '' && key !== 'excelType' && key !== 'company') {
             query[key] = value;
         }
     }
@@ -448,7 +470,7 @@ async function extractAsExcel() {
         if (querySchema.value.userOpenid) {
             name = `${data[0].buyer.organization.company}-${name}`
         }
-        await exportExcel(data, name);
+        await exportExcel(data, name, page);
         page++;
 
 
