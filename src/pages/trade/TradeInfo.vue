@@ -17,6 +17,7 @@
             <el-table-column label="交易单号" prop="transitionId"></el-table-column>
             <el-table-column label="商品名称" prop="propurename"></el-table-column>
             <el-table-column label="购买者Openid" prop="openid"></el-table-column>
+            <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
             <el-table-column label="单位" width="80">
                 <template #default="scope">
                     <ElTag>
@@ -91,6 +92,7 @@
             <el-table-column label="交易单号" prop="transitionId"></el-table-column>
             <el-table-column label="商品名称" prop="propurename"></el-table-column>
             <el-table-column label="购买者Openid" prop="openid"></el-table-column>
+            <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
             <el-table-column label="数量|单位" width="80">
                 <template #default="scope">
                     <ElTag>
@@ -125,7 +127,7 @@
             <el-table-column label="代理备注" v-if="state !== 'agent-refuse'">
                 <template #default="scope">
                     <div>
-                        <ElTag v-if="scope.row.agentDetail.comment">
+                        <ElTag v-if="scope.row.agentDetail &&  scope.row.agentDetail.comment">
                             {{ scope.row.agentDetail.comment }}
                         </ElTag>
                         <ElTag v-else>

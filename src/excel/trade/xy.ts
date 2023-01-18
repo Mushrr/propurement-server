@@ -19,10 +19,11 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
     ])
     xhyTradeData.push([
         "购买单位：",
-        company,
+        `${company}${tradeId}-${fracId}`,
         "",
         "",
         "录单日期：",
+        "",
         date.toLocaleDateString()
     ])
     // main
@@ -84,6 +85,7 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
         "大写：",
         convertCurrency(summary)
     ])
+    console.log(xhyTradeData);
     return xhyTradeData;
 }
 
@@ -138,25 +140,25 @@ export function xhyStyle(sheet: Sheet) {
 
     sheet["!cols"] = [
         {
-            wch: 15,
+            wch: 14,
         },
         {
-            wch: 23,
+            wch: 18,
+        },
+        {
+            wch: 8,
+        },
+        {
+            wch: 8,
+        },
+        {
+            wch: 8,
+        },
+        {
+            wch: 8,
         },
         {
             wch: 10,
-        },
-        {
-            wch: 10,
-        },
-        {
-            wch: 10,
-        },
-        {
-            wch: 10,
-        },
-        {
-            wch: 16,
         }
     ];
 
@@ -221,10 +223,8 @@ export function xhyStyle(sheet: Sheet) {
                             bottom: borderStyle
                         }
                     };
-                    if (C !== 1 && C !== 6) {
-                        cell.s.alignment = {
-                            horizontal: 'center'
-                        }
+                    cell.s.alignment = {
+                        horizontal: 'center'
                     }
                 } else {
                     cell.s = {

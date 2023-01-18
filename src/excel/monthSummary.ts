@@ -9,7 +9,7 @@ export default function monthSummary(data: HistoryData[]) {
     for (const item of data) {
         const date = datetimeToDate(new Date(item.lastModified));
         const ddl = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-        const company = item.agent.organization.company;
+        const company = item.buyer.organization.company;
         const total = Number(item.price) * item.number;
         
         const index = monthData.findIndex((item) => item.日期 === ddl && item.单位名称 === company);

@@ -1,5 +1,15 @@
 <template>
-    <el-form class="flex flex-row p-2 " :model="querySchema">
+    <el-form class="flex flex-row p-2 flex-wrap " :model="querySchema">
+        <el-form-item label="状态">
+            <el-select v-model="querySchema.state">
+                <el-option key="1" label="等待中" value="waiting"></el-option>
+                <el-option key="2" label="代理接收" value="agent-accept"></el-option>
+                <el-option key="3" label="代理拒绝" value="agent-refuse"></el-option>
+                <el-option key="4" label="配送中" value="distributing"></el-option>
+                <el-option key="5" label="用户拒绝" value="user-refuse"></el-option>
+                <el-option key="6" label="完成" value="finished"></el-option>
+            </el-select>
+        </el-form-item>
         <el-form-item label="用户">
             <el-select v-model="querySchema.userOpenid">
                 <el-option key="" label="未选择" value=""></el-option>
@@ -44,7 +54,21 @@
         </el-form-item>
         <el-form-item label="发票单位">
             <el-select v-model="querySchema.company">
-                <el-option key="1" label="溪河源农业开发有限公司" value="溪河源农业开发有限公司"></el-option>
+                <el-option v-for="user in userInfo" :key="user.openid" :value="user.organization?.company!"
+                    :label="user.organization?.company"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="单号">
+            <el-input v-model="tradeId" type="number"></el-input>
+        </el-form-item>
+        <el-form-item label="订单号">
+            <el-select v-model="querySchema.transitionId">
+                <div v-if="data.length > 0 && data[0].buyer">
+                    <el-option key="" value="" label="未选择"></el-option>
+                    <el-option
+                        v-for="transition in new Set(data.map((e: PurchaseRecord) => { return e.transitionId + '|' + e.buyer.organization.company }))"
+                        :key="transition" :value="transition.split('|')[0]" :label="transition"></el-option>
+                </div>
             </el-select>
         </el-form-item>
         <el-form-item label="导出Excel">
@@ -57,7 +81,7 @@
         <el-table-column label="购买者" width="100">
             <template #default="scope">
                 <ElTag v-if="scope.row.buyer">
-                    {{ scope.row.buyer.organization.company }}({{ scope.row.buyer.organization.principal }})
+                    {{ scope.row.buyer.organization.company }}
                 </ElTag>
             </template>
         </el-table-column>
@@ -208,7 +232,9 @@ getUserInfo('agent').then(res => {
 interface QuerySchema {
     userOpenid?: string;
     agentOpenid?: string;
+    transitionId?: string;
     start?: string;
+    state?: "waiting" | "agent-accept" | "agent-refuse" | "distributing" | "user-refuse" | "finished"
     end?: string;
     category?: string;
     isFree?: boolean,
@@ -398,19 +424,21 @@ watch(() => data.value, async (newVal, oldVal) => {
     }
 })
 
+const tradeId = ref(1);
+
 function exportExcel(data: any, name: string, page: number) {
     let book = null;
-    switch(querySchema.value.excelType) {
+    switch (querySchema.value.excelType) {
         case "月数据":
             book = monthSummaryExcel(data);
             save(book, `${name}`);
             break;
         case "表单":
             if (querySchema.value.company) {
-                const arrayData = xhyTrade(data, 1, page, new Date(data[0].lastModified), querySchema.value.company, '杨秀珍');
+                const arrayData = xhyTrade(data, tradeId.value, page, new Date(data[0].lastModified), querySchema.value.company, '杨秀珍');
                 const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
                 const book = XLSX.utils.book_new();
-                
+
                 XLSX.utils.book_append_sheet(book, sheet, '订单');
 
                 save(book, `${name}`);
@@ -425,7 +453,7 @@ function exportExcel(data: any, name: string, page: number) {
             break;
         default:
             ElMessage.warning("请选择导出表格的类型");
-            break 
+            break
     }
 }
 
@@ -443,19 +471,19 @@ async function extractAsExcel() {
     let page = 1;
     let data = [];
     const res = await request.get(
-            '/admin/history',
-            {
-                params: {
-                    openid: userState.openid,
-                    page: page,
-                    pageSize: pageSize.value,
-                    ...query
-                }
+        '/admin/history',
+        {
+            params: {
+                openid: userState.openid,
+                page: page,
+                pageSize: pageSize.value,
+                ...query
             }
-        );
-        data = res.data.data;
+        }
+    );
+    data = res.data.data;
     while (data.length !== 0) {
-        
+
         for (const item of data) {
             await bindItemData(item);
         }
@@ -487,8 +515,6 @@ async function extractAsExcel() {
         )).data.data;
     }
 }
-
-
 </script>
 
 <style scoped>
