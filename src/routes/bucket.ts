@@ -55,18 +55,31 @@ bucketRoute.post("/", async (ctx, next) => {
         const userValidate = await validateUser(req.openid as string, ctx);
         if (userValidate === "user" || userValidate === "admin") {
             const itemsCollection = await getCollection(ctx, "items");
-            itemsCollection.updateMany({
-                openid: req.openid,
-                transitionId: process.env.DEFAULT_ORDERID
-            }, {
-                $set: {
-                    transitionId: createTransitionId(),
-                    state: "waiting"
-                },
-                $currentDate: {
-                    lastModified: true
-                }
-            })
+            if (req.lastModified) {
+                itemsCollection.updateMany({
+                    openid: req.openid,
+                    transitionId: process.env.DEFAULT_ORDERID
+                }, {
+                    $set: {
+                        transitionId: createTransitionId(),
+                        lastModified: !isNaN(new Date(req.lastModified).getTime()) ? new Date(req.lastModified) : new Date(),
+                        state: "waiting"
+                    }
+                })
+            } else {
+                itemsCollection.updateMany({
+                    openid: req.openid,
+                    transitionId: process.env.DEFAULT_ORDERID
+                }, {
+                    $set: {
+                        transitionId: createTransitionId(),
+                        state: "waiting"
+                    },
+                    $currentDate: {
+                        lastModified: true
+                    }
+                })
+            }
             ctx.body = {
                 code: 200,
                 msg: "提交成功"

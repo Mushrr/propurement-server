@@ -24,7 +24,12 @@ transitionRoute.get("/", async (ctx, next) => {
         if (userValidate === "admin") {
             const query = extractObject(req, ["openid", "page", "pageSize"]);
             const itemsCursor = (await itemsCollection).find(
-                query
+                query,
+                {
+                    sort: {
+                        lastModified: -1
+                    }
+                }
             );
             const itemsData = [];
             const page: number = req.page as number | undefined || 1;
