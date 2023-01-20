@@ -102,7 +102,7 @@
                 <div v-if="isError">
                     总计: {{ totalPrice }}, 有{{ nums }}个产品没有价格
                 </div>
-                <div v-else>
+                <div v-else class="text-2xl text-red">
                     总计: {{ totalPrice }}
                 </div>
                 <el-button @click="submitBucket">提交</el-button>
@@ -145,7 +145,7 @@
                 <el-input type="number" v-model="transitionDisplay.detail.price"></el-input>
             </el-form-item>
             <el-form-item label="总计">
-                <div>{{ transitionDisplay.detail.number * transitionDisplay.detail.price }} ￥</div>
+                <div class="text-2xl text-red">{{ transitionDisplay.detail.number * transitionDisplay.detail.price }} ￥</div>
             </el-form-item>
             <el-form-item>
                 <div class="flex flex-row w-100%">
