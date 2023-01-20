@@ -357,7 +357,7 @@ function getPrice(uuid = "", openid = "", unit = "") {
 
 // 物品信息, 获取物品的种类
 
-const getPorpurement = (uuid: string) => {
+const getPorpurement = (uuid: string | string[]) => {
     return request.get(
         '/propurement',
         {
@@ -371,6 +371,7 @@ const getPorpurement = (uuid: string) => {
     )
 }
 
+// v1
 const bindItemData = async (item) => {
     const buyerInfo = (await getUserInfo('user', { userOpenid: item.openid })).data.data as AnyObject;
     if (buyerInfo.length === 1) {
@@ -418,10 +419,91 @@ const bindItemData = async (item) => {
     };
 }
 
-watch(() => data.value, async (newVal, oldVal) => {
-    for (const item of newVal) {
-        bindItemData(item);
+// bindItem v2
+
+const bindItemList = async (itemList: PurchaseRecord[]) => {
+    const allUserOpenid = itemList.map(item => item.openid);
+    const allAgentOpenid = itemList.map(item => item.agentOpenid);
+    const allUUID = itemList.map(item => item.uuid);
+
+    const allUsers = (await getUserInfo('user', { userOpenid: allUserOpenid })).data.data || [];
+    const allAgents = (await getUserInfo('agent', { userOpenid: allAgentOpenid })).data.data || [];
+    const allPropurements = (await getPorpurement(allUUID)).data.data || [];
+
+
+    for (const item of itemList) {
+        // user
+        let userFind = false;
+        let agentFind = false;
+        let propurementFind = false;
+        for (const user of allUsers) {
+
+            if (user.openid === item.openid) {
+                item.buyer = user;
+                userFind = true;
+                break;
+            }
+        }
+
+        for (const agent of allAgents) {
+
+            if (agent.openid === item.agentOpenid) {
+                item.agent = agent;
+                agentFind = true;
+                break;
+            }
+        }
+
+        for (const propurement of allPropurements) {
+
+            if (propurement.uuid === item.uuid) {
+                item.propurement = propurement;
+                propurementFind = true;
+                break;
+            }
+        }
+
+        if (!userFind) {
+            item.buyer = {
+                openid: "未知", organization: {
+                    company: "未知",
+                    principal: "未知",
+                    department: "未知",
+                    position: "未知",
+                    phone_number: "未知"
+                }
+            }
+        }
+
+        if (!agentFind) {
+            item.agent = {
+                openid: "未知", organization: {
+                    company: "未知",
+                    principal: "未知",
+                    department: "未知",
+                    position: "未知",
+                    phone_number: "未知"
+                }
+            }
+        }
+
+        if (!propurementFind) {
+            item.propurement = {
+                uuid: "未知",
+                name: "未知",
+                unit: "未知",
+                price: 0,
+                category: "未知",
+                openid: "未知",
+                lastPrice: []
+            }
+        }
     }
+
+}
+
+watch(() => data.value, async (newVal, oldVal) => {
+    bindItemList(newVal);
 })
 
 const tradeId = ref(1);

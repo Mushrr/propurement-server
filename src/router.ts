@@ -51,6 +51,12 @@ const routes = [
                 name: 'gethistory',
                 title: "历史信息",
                 component: () => import("./pages/trade/GetHistory.vue")
+            },
+            {
+                path: "test",
+                name: "test",
+                title: "测试页面",
+                component: () => import("./pages/Test.vue")
             }
         ]
     },
