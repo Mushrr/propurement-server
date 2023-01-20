@@ -9,6 +9,7 @@ import historyRoute from '@routes/history';
 import priceRoute from '@routes/price';
 import ratioRoute from '@routes/ratio';
 import transitionRoute from '@routes/transition';
+import agentHistoryRoute from '@routes/agenthistory';
 
 const router = new Router()
 
@@ -20,6 +21,7 @@ router.use("/history", historyRoute.routes(), historyRoute.allowedMethods());
 router.use("/price", priceRoute.routes(), priceRoute.allowedMethods());
 router.use("/ratio", ratioRoute.routes(), ratioRoute.allowedMethods());
 router.use("/transition", transitionRoute.routes(), transitionRoute.allowedMethods());
+router.use("/agenthistory", agentHistoryRoute.routes(), agentHistoryRoute.allowedMethods());
 
 
 export default router
