@@ -89,7 +89,7 @@ async function userSearchHandler(ctx: Context) {
     const req = ctx.request.query || {};
     const query = extractObject(req, ["openid", "page", "pageSize"]);
     
-    const finalQuery = extractObject(query, ['category', 'unit'])
+    const finalQuery = extractObject(query, ['category', 'unit', 'uuid[]'])
 
     if (query.category) {
         finalQuery.category = {
@@ -99,38 +99,52 @@ async function userSearchHandler(ctx: Context) {
         }
     }
 
+    if (hasProperties(finalQuery, ['uuid[]'])) {
+        finalQuery.uuid = {
+            $in: finalQuery['uuid[]']
+        }
 
-    const propurementCursor = propurementCollection.find(
-        finalQuery
-    );
-    const propurementData = [];
-    const page: number = req.page as number | undefined || 1;
-    const pageSize: number = req.pageSize as number | undefined || 10;
-    if (page < 1) {
-        ctx.body = {
-            code: 500,
-            message: "page 不能小于1!"
-        }
-        ctx.status = 500;
-    } else {
-        const start = (page - 1) * pageSize;
-        const end = (page) * pageSize;
-        let ind = 0;
-        for await (const propurement of propurementCursor) {
-            if (ind >= start) {
-                propurementData.push(propurement);
-            }
-            ind += 1;
-            if (ind >= end) {
-                break;
-            }
-        }
+        const data = await propurementCollection.find(finalQuery).toArray();
+        
         ctx.body = {
             code: 200,
-            message: "获取成功",
-            data: propurementData
+            message: "获取物品信息成功",
+            data: data
+        }
+    } else {
+        const propurementCursor = propurementCollection.find(
+            finalQuery
+        );
+        const propurementData = [];
+        const page: number = req.page as number | undefined || 1;
+        const pageSize: number = req.pageSize as number | undefined || 10;
+        if (page < 1) {
+            ctx.body = {
+                code: 500,
+                message: "page 不能小于1!"
+            }
+            ctx.status = 500;
+        } else {
+            const start = (page - 1) * pageSize;
+            const end = (page) * pageSize;
+            let ind = 0;
+            for await (const propurement of propurementCursor) {
+                if (ind >= start) {
+                    propurementData.push(propurement);
+                }
+                ind += 1;
+                if (ind >= end) {
+                    break;
+                }
+            }
+            ctx.body = {
+                code: 200,
+                message: "获取成功",
+                data: propurementData
+            }
         }
     }
+    
 }
 
 /**

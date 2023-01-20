@@ -25,40 +25,53 @@ adminUserRoute.get("/", async (ctx, next) => {
     if (hasProperties(req, ["openid"])) {
         const userValidate = await validateUser(req.openid as string, ctx);
         if (userValidate === "admin" || isSuperAdmin(req.openid as string)) {
-            const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid"]);
-
-            if (req.userOpenid) {
-                query['openid'] = req.userOpenid 
-            }
-            const allUserCursor = userCollection.find(
-                query
-            );
-            const userData = [];
-            const page: number = req.page as number | undefined || 1;
-            const pageSize: number = req.pageSize as number | undefined || 10;
-            if (page < 1) {
-                ctx.body = {
-                    code: 500,
-                    message: "page 不能小于1!"
-                }
-                ctx.status = 500;
-            } else {
-                const start = (page - 1) * pageSize;
-                const end = (page) * pageSize;
-                let ind = 0;
-                for await (const user of allUserCursor) {
-                    if (ind >= start) {
-                        userData.push(user);
-                    }
-                    ind += 1;
-                    if (ind >= end) {
-                        break;
-                    }
-                }
+            if (hasProperties(req, ['userOpenid[]']) && Array.isArray(req['userOpenid[]'])) {
+                const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid", "userOpenid[]"]) || {};
+                const data = await userCollection.find({
+                    openid: {
+                        $in: req['userOpenid[]']
+                    },
+                    ...query
+                }).toArray();
                 ctx.body = {
                     code: 200,
-                    message: "获取成功",
-                    data: userData
+                    data
+                }
+            } else {
+                const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid", "openid[]"]);
+                if (req.userOpenid) {
+                    query['openid'] = req.userOpenid
+                }
+                const allUserCursor = userCollection.find(
+                    query
+                );
+                const userData = [];
+                const page: number = req.page as number | undefined || 1;
+                const pageSize: number = req.pageSize as number | undefined || 10;
+                if (page < 1) {
+                    ctx.body = {
+                        code: 500,
+                        message: "page 不能小于1!"
+                    }
+                    ctx.status = 500;
+                } else {
+                    const start = (page - 1) * pageSize;
+                    const end = (page) * pageSize;
+                    let ind = 0;
+                    for await (const user of allUserCursor) {
+                        if (ind >= start) {
+                            userData.push(user);
+                        }
+                        ind += 1;
+                        if (ind >= end) {
+                            break;
+                        }
+                    }
+                    ctx.body = {
+                        code: 200,
+                        message: "获取成功",
+                        data: userData
+                    }
                 }
             }
         } else {
@@ -222,7 +235,7 @@ adminUserRoute.post("/", async (ctx, next) => {
             for (const pair of data.principals) {
                 if (pair.phone === ctx.request.body.phone &&
                     pair.password === ctx.request.body.password) {
-                        ans.userInfo = pair
+                    ans.userInfo = pair
                 }
             }
 
