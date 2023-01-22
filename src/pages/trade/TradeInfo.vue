@@ -127,7 +127,7 @@
             <el-table-column label="代理备注" v-if="state !== 'agent-refuse'">
                 <template #default="scope">
                     <div>
-                        <ElTag v-if="scope.row.agentDetail &&  scope.row.agentDetail.comment">
+                        <ElTag v-if="scope.row.agentDetail && scope.row.agentDetail.comment">
                             {{ scope.row.agentDetail.comment }}
                         </ElTag>
                         <ElTag v-else>
@@ -272,7 +272,15 @@
             </template>
         </template>
         <template v-else-if="currentData.info_type === 'del'">
-
+            <div class="text-xl">是否真的要删除
+                <el-tag>
+                    {{ currentData.data.propurename }}
+                </el-tag>
+            </div>
+            <div class="flex flex-row-reverse items-center">
+                <el-button @click="deleteItems(currentData.data)">删除</el-button>
+                <el-button @click="handleClose">取消</el-button>
+            </div>
         </template>
     </el-dialog>
 </template>
@@ -420,7 +428,6 @@ watch(state, (newState) => {
         state: newState
     }, () => {
         fetchDetail();
-        console.log(data.value, "xdrfgvsdrgsedrgsdrgsedrgsedrg");
     });
 })
 
@@ -486,6 +493,7 @@ function handleDelete(row) {
 
 
     currentData.value.info_type = "del";
+    currentData.value.data = row
     open();
 }
 
@@ -638,6 +646,33 @@ const stateInfo = ref([
         label: "已完成"
     }
 ])
+
+
+function deleteItems(data: PurchaseRecord) {
+    request.delete(
+        '/admin/history',
+        {
+            params: {
+                openid: userState.openid,
+                uuid: data.uuid,
+                transitionId: data.transitionId,
+                userOpenid: data.openid
+            }
+        }
+    ).then(res => {
+        if (res.data.code === 200) {
+            ElMessage.success(`删除${data.propurename}成功!`);
+        } else {
+            ElMessage.error("删除失败!");
+        }
+        handleClose();
+        getItemsData(currentPage.value, {
+            state: state.value
+        }, () => {
+            fetchDetail();
+        });
+    })
+}
 
 </script>
 
