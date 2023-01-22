@@ -1,5 +1,6 @@
+import logger from '@utils/logger';
 import { AnyObject } from '@locTypes/base';
-import { extractObject, timeValid, hasProperties } from '@utils/base';
+import { extractObject, timeValid, hasProperties, isSuperAdmin } from '@utils/base';
 import { validateUser, getCollection } from '@utils/fetchTools';
 // history data
 import Route from 'koa-router';
@@ -77,6 +78,54 @@ historyRoute.get('/', async (ctx, next) => {
         }
         ctx.status = 400;
     }
+    await next();
+})
+
+
+// 删除 items
+
+historyRoute.del('/', async (ctx, next) => {
+    const req = ctx.request.query || {};
+    if (hasProperties(req, ['openid', 'uuid', 'transitionId', 'userOpenid'])) {
+        const userValidate = await validateUser(req.openid as string, ctx);
+        if (userValidate === "admin" || isSuperAdmin(req.openid as string)) {
+            const itemsCollection = await getCollection(ctx, 'items');
+
+            const data = await itemsCollection.findOneAndDelete({
+                openid: req.userOpenid,
+                uuid: req.uuid,
+                transitionId: req.transitionId
+            })
+
+            if (data.ok) {
+                ctx.body = {
+                    code: 200,
+                    message: "删除成功",
+                }
+                logger.info("管理员删除订单成功!");
+            } else {
+                ctx.body = {
+                    code: 404,
+                    message: "未发现此订单项目"
+                }
+            }
+        } else {
+            ctx.body = {
+                code: 400,
+                message: "您并非管理员，无法尝试删除items"
+            }
+            ctx.status = 400;
+            logger.info(`${ctx.ip} 正在尝试越权删除物品`);
+        }
+    } else {
+        ctx.body = {
+            code: 500,
+            message: "缺少openid，uuid，transitionId和userOpenid",
+        }
+        logger.error(`${ctx.ip} 并未提供必要信息`);
+        ctx.status = 500;
+    }
+
     await next();
 })
 

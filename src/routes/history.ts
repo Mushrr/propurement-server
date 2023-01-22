@@ -1,4 +1,4 @@
-import { hasProperties, extractObject } from '@utils/base';
+import { hasProperties, extractObject, timePlus, Week } from '@utils/base';
 import { getCollection } from '@utils/fetchTools';
 // 获得历史订单数据
 
@@ -24,6 +24,9 @@ historyRoute.get("/", async (ctx, next) => {
         const query = extractObject(req, ["openid", "page", "pageSize"]);
         const allUserCursor = userCollection.find({
             openid: openid,
+            lastModified: {
+                $lte: timePlus(new Date(), Week),
+            },
             ...query
         });
         const userData = [];
