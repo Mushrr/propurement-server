@@ -143,7 +143,7 @@
         <el-table-column label="代理人信息">
             <template #default="scope">
                 <ElTag v-if="scope.row.agent">
-                    {{ scope.row.agent.organization.company }}({{ scope.row.agent.organization.principal }})
+                    {{ scope.row.agent.organization.company }}
                 </ElTag>
             </template>
         </el-table-column>
@@ -276,7 +276,9 @@ watch(querySchema.value, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         if (value === '' || key === 'excelType' || key === 'company') {
-            continue;
+            if (key === 'company') {
+                queryObj['organization.company'] = value;
+            }
         } else {
             queryObj[key] = value;
         }
@@ -299,25 +301,13 @@ watch(querySchema.value, (newVal, oldVal) => {
     })
 })
 
-request.get(
-    '/admin/history',
-    {
-        params: {
-            openid: userState.openid,
-            page: pageIndex.value,
-        }
-    }
-).then(res => {
-    data.value = res.data.data;
-}).catch(err => {
-    ElMessage.error(err.response.data.message);
-})
-
 watch(pageIndex, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         if (value === '' || key === 'excelType' || key === 'company') {
-            continue;
+            if (key === 'company') {
+                queryObj['organization.company'] = value;
+            }
         } else {
             queryObj[key] = value;
         }
@@ -392,6 +382,16 @@ const bindItemData = async (item) => {
     const agentInfo = (await getUserInfo('agent', { userOpenid: item.agentOpenid })).data.data as AnyObject;
     if (agentInfo.length === 1) {
         item.agent = agentInfo[0];
+    } else if (Boolean(item.isFree)) {
+        item.agent = {
+            openid: "未知", organization: {
+                company: "未知",
+                principal: "未知",
+                department: "未知",
+                position: "未知",
+                phone_number: "未知"
+            }
+        }
     } else {
         ElMessage.error(`获取${item.agentOpenid}信息失败`);
         item.agent = {
