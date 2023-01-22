@@ -188,7 +188,6 @@
                     <el-button type="primary" @click="changeUserData">提交</el-button>
                 </el-form-item>
             </el-form>
-            {{ changeData.principals }}
         </template>
     </el-dialog>
 </template>
