@@ -1,5 +1,5 @@
 import { getCollection, validateUser } from '@utils/fetchTools';
-import { hasProperties } from '@utils/base';
+import { hasProperties, timePlus, Week } from '@utils/base';
 // 代理History
 
 import Route from 'koa-router'
@@ -16,7 +16,10 @@ agentHistoryRoute.get('/', async (ctx, next) => {
 
             const items = await itemsCollection.find({
                 agentOpenid: req.openid,
-                state: req.state || "agent-accept"
+                state: req.state || "agent-accept",
+                lastModified: {
+                    $lte: timePlus(new Date(), Week),
+                }
             }).toArray();
 
             ctx.body = {
