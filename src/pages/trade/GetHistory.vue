@@ -276,9 +276,7 @@ watch(querySchema.value, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         if (value === '' || key === 'excelType' || key === 'company') {
-            if (key === 'company') {
-                queryObj['organization.company'] = value;
-            }
+            continue
         } else {
             queryObj[key] = value;
         }
@@ -305,9 +303,7 @@ watch(pageIndex, (newVal, oldVal) => {
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         if (value === '' || key === 'excelType' || key === 'company') {
-            if (key === 'company') {
-                queryObj['organization.company'] = value;
-            }
+            continue
         } else {
             queryObj[key] = value;
         }
