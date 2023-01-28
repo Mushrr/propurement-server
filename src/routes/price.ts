@@ -33,7 +33,14 @@ priceRoute.get("/", async (ctx, next) => {
         }
         const priceData = [];
         for (const propure of data) {
-            const dataSchema = {
+            const dataSchema: {
+                id: any,
+                uuid: string,
+                name: string,
+                defaultUnits: string,
+                category: string,
+                lastPrice: any[]
+            } = {
                 id: propure._id,
                 uuid: propure.uuid,
                 name: propure.name,

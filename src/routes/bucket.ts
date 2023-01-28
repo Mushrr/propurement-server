@@ -76,6 +76,7 @@ bucketRoute.post("/", async (ctx, next) => {
                         state: "waiting"
                     },
                     $currentDate: {
+                        // @ts-ignore
                         lastModified: true
                     }
                 })

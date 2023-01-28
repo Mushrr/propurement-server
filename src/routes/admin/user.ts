@@ -275,7 +275,7 @@ adminUserRoute.del("/", async (ctx, next) => {
     if (hasProperties(req, ["openid", "userOpenid"])) {
         const userOpenid = req.userOpenid;
         const userValidate = await validateUser(req.openid as string, ctx);
-        if (userValidate === "admin" || isSuperAdmin(req.openid)) {
+        if (userValidate === "admin" || isSuperAdmin(req.openid as string)) {
             userCollection.findOneAndDelete({ openid: userOpenid });
             ctx.body = {
                 code: 200,
