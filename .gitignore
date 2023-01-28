@@ -3,3 +3,4 @@ screenshots/*.mp4
 dist
 public/*
 .env
+yarn.lock
