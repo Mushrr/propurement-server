@@ -71,8 +71,14 @@
                 </div>
             </el-select>
         </el-form-item>
+        <el-form-item label="采购人">
+            <el-input v-model="principal" type="string"></el-input>
+        </el-form-item>
         <el-form-item label="导出Excel">
             <el-button @click="extractAsExcel">导出</el-button>
+        </el-form-item>
+        <el-form-item class="ml-2">
+            <el-button @click="showUsage = true">用法说明</el-button>
         </el-form-item>
     </el-form>
     <el-table :data="data">
@@ -167,6 +173,10 @@
     </el-table>
     <el-pagination v-model:current-page="pageIndex" :total="1000">
     </el-pagination>
+
+    <el-dialog v-model="showUsage">
+        <usage></usage>
+    </el-dialog>
 </template>
 
 <script lang='ts' setup>
@@ -184,6 +194,7 @@ import monthSummaryExcel from '../../excel/monthSummaryExcel';
 import monthGroupExcel from '../../excel/monthGroupExcel';
 import save from '../../excel/save';
 import { xhyTrade, XLSX, xhyStyle } from '../../excel/excel';
+import Usage from '../../components/Usage.vue'
 
 type UserType = "admin" | "agent" | "user" | null;
 
@@ -498,6 +509,8 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
 
 }
 
+const principal = ref('');
+
 watch(() => data.value, async (newVal, oldVal) => {
     bindItemList(newVal);
 })
@@ -513,7 +526,7 @@ function exportExcel(data: any, name: string, page: number) {
             break;
         case "表单":
             if (querySchema.value.company) {
-                const arrayData = xhyTrade(data, tradeId.value, page, new Date(data[0].lastModified), querySchema.value.company, '杨秀珍');
+                const arrayData = xhyTrade(data, tradeId.value, page, new Date(data[0].lastModified), querySchema.value.company, principal.value);
                 const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
                 const book = XLSX.utils.book_new();
 
@@ -593,6 +606,10 @@ async function extractAsExcel() {
         )).data.data;
     }
 }
+
+const showUsage = ref(false);
+
+
 </script>
 
 <style scoped>
