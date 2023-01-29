@@ -28,6 +28,7 @@ mongoClient.connect().then(res => {
                 }
             ]
         })
+        logger.info("成功添加管理员");
     })
 }).catch(err => {
     logger.error(err);
