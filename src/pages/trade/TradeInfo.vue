@@ -155,7 +155,7 @@
                                         {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
                                     </ElTag>
                                     <ElTag type="success">
-                                        总计: {{ ((price.price - scope.row.agentDetail.price).toFixed(2) *
+                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
                                         scope.row.number).toFixed(2) }}￥
                                     </ElTag>
                                 </div>
@@ -164,7 +164,7 @@
                                         {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
                                     </ElTag>
                                     <ElTag type="warning">
-                                        总计: {{ ((price.price - scope.row.agentDetail.price).toFixed(2) *
+                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
                                         scope.row.number).toFixed(2) }}￥
                                     </ElTag>
                                 </div>
@@ -525,7 +525,11 @@ function handleEdit(row) {
     open();
 }
 
-const currentPropurement = ref({});
+// @ts-ignore
+const currentPropurement: Ref<{
+    defaultUnits: string[],
+    [props: string]: any
+}> = ref({});
 // @ts-ignore
 function getCurrentPropurement(uuid) {
     request.get(

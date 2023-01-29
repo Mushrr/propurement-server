@@ -216,21 +216,21 @@ const currentPro: Ref<{
     info_type: "info",
     data: {}
 })
-
+// @ts-ignore
 function info(data) {
 
     currentPro.value.info_type = "info";
     currentPro.value.data = data;
     open();
 }
-
+// @ts-ignore
 function change(data) {
 
     currentPro.value.info_type = "change";
     currentPro.value.data = data;
     open();
 }
-
+// @ts-ignore
 function del(data) {
 
     currentPro.value.info_type = "del";
@@ -283,7 +283,7 @@ function handleInputConfirm() {
     showAddTag.value = false;
     currentTagData.value = "";
 }
-
+// @ts-ignore
 function handleClose(tag) {
     const index = currentPro.value.data.defaultUnits.indexOf(tag);
     if (index > -1) {
