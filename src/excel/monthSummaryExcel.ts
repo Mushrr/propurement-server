@@ -98,7 +98,7 @@ export default function monthSummaryExcel(data: HistoryData[]) {
     standardSheetStyle(monthSheet);
 
     XLSX.utils.book_append_sheet(book, monthSheet, '汇总');
-    XLSX.utils.book_append_sheet(book, daySheet, '每日细分');
+    XLSX.utils.book_append_sheet(book, daySheet, '每日明分');
 
     // 汇总和每日细分的样式
 

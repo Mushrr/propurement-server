@@ -333,7 +333,12 @@ interface AgentItemDetail {
 }
 
 const data: Ref<PurchaseRecord[]> = ref([]);
-const agentInfo: Ref<{ [props: string]: string }> = ref({});
+const agentInfo: Ref<{ 
+    openid: string,
+    organization: {
+        company: string
+    }
+ }[]> = ref([]);
 
 const getAgentInfo = () => {
     request.get('/admin/user', {
@@ -446,6 +451,10 @@ function handleClose() {
         number: 0,
         unit: "",
         lastPrice: [],
+        state: "",
+        agentOpenid: "",
+        price: 0,
+        isFree: false
     }
     close();
 }
@@ -462,6 +471,7 @@ function close() {
     }
 }
 
+// @ts-ignore
 const currentData: Ref<
     {
         info_type: "edit" | "del",
@@ -489,14 +499,14 @@ const waitingData = ref({
 })
 
 
+// @ts-ignore
 function handleDelete(row) {
-
-
     currentData.value.info_type = "del";
     currentData.value.data = row
     open();
 }
 
+// @ts-ignore
 function handleEdit(row) {
 
     waitingData.value.unit = row.unit;
@@ -516,6 +526,7 @@ function handleEdit(row) {
 }
 
 const currentPropurement = ref({});
+// @ts-ignore
 function getCurrentPropurement(uuid) {
     request.get(
         '/admin/propurement',

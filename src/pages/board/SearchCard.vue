@@ -139,6 +139,7 @@ function search() {
             needAll: 1
         },
         headers: {
+            // @ts-ignore
             authorization: userState.token_id
         }
     }).then((res) => {

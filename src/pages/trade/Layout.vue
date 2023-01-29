@@ -98,6 +98,7 @@ for (const key of Object.keys(list.value)) {
         }
     ).then(res => {
         console.log(res.data.data);
+        // @ts-ignore
         list.value[key] = res.data.data.length;
     })
 }

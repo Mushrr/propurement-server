@@ -47,8 +47,8 @@
         </el-form-item>
         <el-form-item label="表格类型">
             <el-select v-model="querySchema.excelType">
-                <el-option key="1" label="月数据" value="月数据" default></el-option>
-                <el-option key="2" label="表单" value="表单"></el-option>
+                <el-option key="2" label="配送单" value="表单"></el-option>
+                <el-option key="1" label="月度汇总" value="月数据" default></el-option>
                 <el-option key="3" label="财务系统表" value="财务系统表"></el-option>
             </el-select>
         </el-form-item>
@@ -268,11 +268,20 @@ interface PurchaseRecord {
         unit: string,
         price: number
     }[],
+    buyer: {
+        openid: string,
+        organization: {
+            company: string,
+            department: string,
+            position: string,
+        }
+    },
     [props: string]: string | number | undefined | AnyObject | AnyObject[] | { openid: string, unit: string, price: number }[]
 }
 
 const pageIndex = ref(1);
 
+// @ts-ignore
 const querySchema: Ref<QuerySchema> = ref({});
 
 
@@ -369,6 +378,7 @@ const getPorpurement = (uuid: string | string[]) => {
 }
 
 // v1
+// @ts-ignore
 const bindItemData = async (item) => {
     const buyerInfo = (await getUserInfo('user', { userOpenid: item.openid })).data.data as AnyObject;
     if (buyerInfo.length === 1) {
@@ -472,12 +482,11 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
 
         if (!userFind) {
             item.buyer = {
-                openid: "未知", organization: {
+                openid: "未知", 
+                organization: {
                     company: "未知",
-                    principal: "未知",
                     department: "未知",
                     position: "未知",
-                    phone_number: "未知"
                 }
             }
         }

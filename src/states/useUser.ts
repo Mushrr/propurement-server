@@ -35,6 +35,7 @@ export default defineStore('userinfo', {
             console.log(state);
             for (let [key, value] of Object.entries(state)) {
                 if (key === "avator") {
+                // @ts-ignore
                     this.$state[key] = import.meta.env.VITE_URL_PREFIX + "/" + value
                 } else {
                     // @ts-ignore
@@ -44,6 +45,7 @@ export default defineStore('userinfo', {
         },
         
         quit() {
+            // @ts-ignore
             ElMessage.info(`${this.username}退出成功，欢迎下次再来!`)
             router.replace({
                 path: "/"

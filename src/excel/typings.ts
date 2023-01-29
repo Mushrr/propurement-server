@@ -55,6 +55,6 @@ interface HistoryData {
 }
 
 
-export {
+export type {
     HistoryData
 }

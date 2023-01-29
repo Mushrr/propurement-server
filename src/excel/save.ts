@@ -1,5 +1,6 @@
 export default function save(book: any, name: string) {
     function downloadExcel() {
+        // @ts-ignore
         const out = XLS.write(book, { bookType: 'xlsx', bookSST: false, type: 'binary' });
         function saveAs(blob: Blob, name: string) {
             const a = document.createElement('a');
@@ -7,7 +8,7 @@ export default function save(book: any, name: string) {
             a.download = name;
             a.click();
         }
-
+        // @ts-ignore
         function s2ab(s) {
             var buf = new ArrayBuffer(s.length);
             var view = new Uint8Array(buf);

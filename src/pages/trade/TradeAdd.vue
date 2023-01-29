@@ -257,7 +257,8 @@ interface Propurement {
     },
     agentPrice: {
         agent: { agent: string, unit: string, price: number }[]
-    }
+    },
+    lastPrice: { price: number, unit: string }[]
 }
 
 const currentPropurementData: Ref<Propurement[]> = ref([{
@@ -274,7 +275,8 @@ const currentPropurementData: Ref<Propurement[]> = ref([{
     },
     agentPrice: {
         agent: [{ agent: '', unit: '', price: 0 }]
-    }
+    },
+    lastPrice: [{ price: 0, unit: '' }]
 }]);
 
 const getPropurementData = ({ category }: { category: string }) => {
@@ -325,7 +327,8 @@ watch(() => currentSelectedCategory.value, (nv) => {
 
 
 const buyDialogShow = ref(false);
-const currentPropurement: Ref<Propurement> = ref({});
+// @ts-ignore
+const currentPropurement: Ref<any> = ref({});
 
 const buyDialogOpen = () => {
     if (!buyDialogShow.value) {
@@ -343,6 +346,7 @@ const buyDialogClose = () => {
 const openBuyDialog = async (propurementInfo: Propurement) => {
     currentPropurement.value = propurementInfo
     const historyData = (await getHistoryData(currentPropurement.value.uuid)).data.data;
+    // @ts-ignore    
     currentPropurement.value.lastPrice = historyData.length === 1 ? historyData[0].lastPrice : 0;
     buyDialogOpen();
 }
@@ -425,7 +429,7 @@ watch(() => transitionDisplay.value.detail.unit, (nv) => {
 })
 
 
-const bucketData = ref([]);
+const bucketData: Ref<Propurement[]> = ref([]);
 
 const getHistoryData = async (uuid: string) => {
     return request.get(
@@ -472,7 +476,9 @@ const summaryPrice = () => {
     for (let i = 0; i < bucketData.value.length; i++) {
         let find = false;
         for (let price of bucketData.value[i].lastPrice) {
+            // @ts-ignore
             if (price.unit === bucketData.value[i].unit) {
+                // @ts-ignore
                 totalPrice.value += price.price * bucketData.value[i].number;
                 find = true;
             }
@@ -484,7 +490,7 @@ const summaryPrice = () => {
     }
 }
 
-
+// @ts-ignore
 const deleteItem = (data) => {
     console.log(data);
     request.delete(

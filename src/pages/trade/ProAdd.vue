@@ -78,6 +78,7 @@ function handleInputConfirm() {
     currentTagData.value = "";
 }
 
+// @ts-ignore
 function handleClose(tag) {
     const index = currentPro.value.defaultUnits.indexOf(tag);
     if (index > -1) {
@@ -117,6 +118,7 @@ function submit() {
         return;
     }
 
+    // @ts-ignore
     const filterFunc = (v) => {
         if (v === "") {
             return false
@@ -224,7 +226,9 @@ watch(() => currentPro.value.defaultUnits, (nv, ov) => {
     }
 })
 
+// @ts-ignore
 watch(() => unit.value, (nv, ov) => {
+    // @ts-ignore
     const filterFunc = (v) => {
         if (v === "") {
             return false
@@ -273,6 +277,7 @@ watch(() => currentPro.value.category, (nv, ov) => {
 })
 
 watch(() => category.value, (nv, ov) => {
+    // @ts-ignore
     const filterFunc = (v) => {
         if (v === "") {
             return false

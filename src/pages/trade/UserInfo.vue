@@ -299,14 +299,14 @@ function close() {
     }
     historyPriceData.value = [];
 }
-
+// @ts-ignore
 function detail(row) {
     dialogData.value.dialogType = "info";
     dialogData.value.data = row;
 
     open();
 }
-
+// @ts-ignore
 function change(row) {
     dialogData.value.dialogType = "change";
     dialogData.value.data = row;
@@ -320,7 +320,7 @@ function change(row) {
     open();
     console.log(row);
 }
-
+// @ts-ignore
 function del(row) {
     dialogData.value.dialogType = "delete";
     dialogData.value.data = row;
@@ -375,6 +375,7 @@ const changeUnitData = ref({
     unit: '',
     price: 0
 })
+// @ts-ignore
 function addPriceRecord(data) {
     addUnitDialogVisible.value = true;
     currentRow.value = data;
@@ -421,6 +422,7 @@ function changeUnit() {
 const changeData = ref({
     openid: "",
     user_type: "",
+    session_key: "",
     organization: {
         company: '',
         department: '',
@@ -460,6 +462,7 @@ function changeUserData() {
 
 const filterStr = ref('');
 let hasSearch = false;
+// @ts-ignore
 let historyData = []
 const filterFunc = () => {
     if (hasSearch) {
@@ -472,6 +475,7 @@ const filterFunc = () => {
         hasSearch = false;
     } else {
         historyPriceData.value = historyPriceData.value.filter((e) => {
+            // @ts-ignore
             return e.name.indexOf(filterStr.value) !== -1;
         })
     }
