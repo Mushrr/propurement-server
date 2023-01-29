@@ -26,7 +26,8 @@ mongoClient.connect().then(res => {
                     name: "管理员",
                     password: "aaddmin"
                 }
-            ]
+            ],
+            user_type: "admin"
         })
         logger.info("成功添加管理员");
     })
