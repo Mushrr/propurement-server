@@ -45,11 +45,11 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
             item.propurename,
             item.unit,
             item.number,
-            item.price,
-            Number(item.number) * Number(item.price),
+            Number(item.price).toFixed(2),
+            (Number(item.number) * Number(item.price)).toFixed(2),
             item.userComment
         ])
-        summary += Number(item.number) * Number(item.price);
+        summary += (Number(item.number) * Number(item.price));
         ind += 1;
     }
 
@@ -71,7 +71,7 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
         '',
         '',
         '',
-        summary,
+        summary.toFixed(2),
         ''
     ])
 
@@ -185,7 +185,7 @@ export function xhyStyle(sheet: Sheet) {
                     }
                 }
 
-                if (R === 1) {
+                else if (R === 1) {
                     cell.s = {
                         font: {
                             sz: 11
@@ -249,5 +249,6 @@ export function xhyStyle(sheet: Sheet) {
         }
     }
 
+    console.log(sheet);
     return sheet;
 }

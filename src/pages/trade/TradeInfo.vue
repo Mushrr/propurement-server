@@ -1,90 +1,103 @@
 <template>
+    {{ checked }}
+    {{ showAlignDialog }}
     <div class="flex flex-row justify-center items-center">
-        <el-tag>
-            订单状态状态
-        </el-tag>
-        <el-radio-group v-model="state">
-            <el-radio-button label="waiting">等待中</el-radio-button>
-            <el-radio-button label="agent-accept">代理人已接受</el-radio-button>
-            <el-radio-button label="agent-refuse">代理人已拒绝</el-radio-button>
-            <el-radio-button label="distributing">正在配发中</el-radio-button>
-            <el-radio-button label="user-refuse">用户拒收</el-radio-button>
-            <el-radio-button label="finished">完成</el-radio-button>
-        </el-radio-group>
+
+        <div class="flex flex-col items-center">
+            <el-tag class="">
+                订单状态状态
+            </el-tag>
+            <el-radio-group v-model="state">
+                <el-radio-button label="waiting">等待中</el-radio-button>
+                <el-radio-button label="agent-accept">代理人已接受</el-radio-button>
+                <el-radio-button label="agent-refuse">代理人已拒绝</el-radio-button>
+                <el-radio-button label="distributing">正在配发中</el-radio-button>
+                <el-radio-button label="user-refuse">用户拒收</el-radio-button>
+                <el-radio-button label="finished">完成</el-radio-button>
+            </el-radio-group>
+            <el-button @click="showAlignDialog = true">委派</el-button>
+        </div>
     </div>
     <div v-if="state === 'waiting'">
-        <el-table :data="data">
-            <el-table-column label="交易单号" prop="transitionId"></el-table-column>
-            <el-table-column label="商品名称" prop="propurename"></el-table-column>
-            <el-table-column label="购买者Openid" prop="openid"></el-table-column>
-            <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
-            <el-table-column label="单位" width="80">
-                <template #default="scope">
-                    <ElTag>
-                        {{ scope.row.unit }}
-                    </ElTag>
-                </template>
-            </el-table-column>
-            <el-table-column label="数量" width="80">
-                <template #default="scope">
-                    <ElTag>
-                        {{ scope.row.number }}
-                    </ElTag>
-                </template>
-            </el-table-column>
-            <el-table-column label="委派">
-                <template #default="scope">
-                    <template v-for="agent in agentInfo">
-                        <el-tag v-if="agent.openid === scope.row.agentOpenid">
-                            {{ agent.organization.company }}
-                        </el-tag>
+        <el-checkbox-group v-model="checked">
+            <el-table :data="data">
+                <el-table-column label="选择">
+                    <template #default="scope">
+                        <el-checkbox :label="scope.row._id"></el-checkbox>
                     </template>
-                </template>
-            </el-table-column>
-            <el-table-column label="价格">
-                <template #default="scope">
-                    <div v-for="price in scope.row.lastPrice">
-                        <template v-if="price.unit === scope.row.unit">
-                            <ElTag>
-                                {{ price.price }}￥ /{{ price.unit }}
-                            </ElTag>
-                            <ElTag>
-                                总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
-                            </ElTag>
-                        </template>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="用户备注">
-                <template #default="scope">
-                    <div>
+                </el-table-column>
+                <el-table-column label="商品名称" prop="propurename"></el-table-column>
+                <el-table-column label="交易单号" prop="transitionId"></el-table-column>
+                <el-table-column label="购买者Openid" prop="openid"></el-table-column>
+                <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
+                <el-table-column label="单位" width="80">
+                    <template #default="scope">
                         <ElTag>
-                            {{ scope.row.userComment }}
+                            {{ scope.row.unit }}
                         </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="免配送">
-                <template #default="scope">
-                    <div>
-                        <el-tag v-if="scope.row.isFree" type="danger">
-                            免配送
-                        </el-tag>
-                        <el-tag v-else>
-                            正常配送
-                        </el-tag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label='编辑'>
-                <template #default="scope">
-                    <div class="flex flex-row">
-                        <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-                        <el-button type="danger" @click="handleDelete(scope.row)">删除</el-button>
-                    </div>
-                </template>
-            </el-table-column>
-        </el-table>
+                    </template>
+                </el-table-column>
+                <el-table-column label="数量" width="80">
+                    <template #default="scope">
+                        <ElTag>
+                            {{ scope.row.number }}
+                        </ElTag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="委派">
+                    <template #default="scope">
+                        <template v-for="agent in agentInfo">
+                            <el-tag v-if="agent.openid === scope.row.agentOpenid">
+                                {{ agent.organization.company }}
+                            </el-tag>
+                        </template>
+                    </template>
+                </el-table-column>
+                <el-table-column label="价格">
+                    <template #default="scope">
+                        <div v-for="price in scope.row.lastPrice">
+                            <template v-if="price.unit === scope.row.unit">
+                                <ElTag>
+                                    {{ price.price }}￥ /{{ price.unit }}
+                                </ElTag>
+                                <ElTag>
+                                    总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
+                                </ElTag>
+                            </template>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="用户备注">
+                    <template #default="scope">
+                        <div>
+                            <ElTag>
+                                {{ scope.row.userComment }}
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="免配送">
+                    <template #default="scope">
+                        <div>
+                            <el-tag v-if="scope.row.isFree" type="danger">
+                                免配送
+                            </el-tag>
+                            <el-tag v-else>
+                                正常配送
+                            </el-tag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label='编辑'>
+                    <template #default="scope">
+                        <div class="flex flex-row">
+                            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button type="danger" @click="handleDelete(scope.row)">删除</el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-checkbox-group>
     </div>
     <div
         v-else-if="state === 'agent-accept' || state === 'agent-refuse' || state === 'distributing' || state === 'finished' || state === 'user-refuse'">
@@ -152,10 +165,10 @@
                             <template v-if="price.unit === scope.row.unit">
                                 <div v-if="price.price > scope.row.agentDetail.price">
                                     <ElTag type="success">
-                                        {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
+                                        {{ (Number(price.price - scope.row.agentDetail.price)).toFixed(2) }}￥ /{{ price.unit }}
                                     </ElTag>
                                     <ElTag type="success">
-                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
+                                        总计: {{ ((Number(price.price - scope.row.agentDetail.price)) *
                                         scope.row.number).toFixed(2) }}￥
                                     </ElTag>
                                 </div>
@@ -283,6 +296,20 @@
             </div>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="showAlignDialog">
+        <div class="flex flex-row justify-center items-center">
+            <div>请选择代理人</div>
+            <el-select v-model="waitingData.agentOpenid">
+                <el-option v-for="agent in agentInfo" :label="agent.organization.company" :value="agent.openid">
+                </el-option>
+            </el-select>
+        </div>
+        <div class="flex flex-row">
+            <el-button @click="showAlignDialog = false">取消</el-button>
+            <el-button @click="listAgent">委派</el-button>
+        </div>
+    </el-dialog>
 </template>
 
 <script lang='ts' setup>
@@ -301,6 +328,7 @@ const userState = useUser();
 const state = ref("waiting");
 
 interface PurchaseRecord {
+    _id: string,
     uuid: string, // 物品UUID, 可以查到代理给出的报价
     transitionId: string, // 交易订单号ID
     openid: string, // 用户的openid
@@ -333,12 +361,12 @@ interface AgentItemDetail {
 }
 
 const data: Ref<PurchaseRecord[]> = ref([]);
-const agentInfo: Ref<{ 
+const agentInfo: Ref<{
     openid: string,
     organization: {
         company: string
     }
- }[]> = ref([]);
+}[]> = ref([]);
 
 const getAgentInfo = () => {
     request.get('/admin/user', {
@@ -686,6 +714,69 @@ function deleteItems(data: PurchaseRecord) {
         }, () => {
             fetchDetail();
         });
+    })
+}
+
+const checked: Ref<string[]> = ref([]);
+const showAlignDialog = ref(false);
+const alignItem = () => { }
+
+function handleCheckAllChange(row: any) {
+    // @ts-ignore
+    checked.value.push(row);
+}
+
+function listAgent() {
+    const transitionData = [];
+    for (const item of checked.value) {
+        for (const cur of data.value) {
+            if (cur._id === item) {
+                transitionData.push({
+                    openid: cur.openid,
+                    number: cur.number,
+                    unit: cur.unit,
+                    uuid: cur.uuid,
+                    state: cur.state,
+                    price: cur.price,
+                    agentOpenid: waitingData.value.agentOpenid,
+                    transitionId: cur.transitionId
+                })
+                break;
+            }
+        }
+    }
+    const allPromise = [];
+    for (const item of transitionData) {
+        console.log(item);
+        const pro = request.post(
+            '/admin/transition',
+            {
+                openid: userState.openid,
+                transitionId: item.transitionId,
+                query: {
+                    uuid: item.uuid,
+                },
+                transition: item
+            }
+        ).then(res => {
+            ElMessage.success('提交成功');
+            handleClose();
+            getItemsData(currentPage.value, {
+                state: state.value
+            }, () => {
+                fetchDetail();
+            });
+        }).catch(err => {
+            ElMessage.error(err.response.data.message);
+        })
+
+        allPromise.push(pro);
+    }
+
+    const allPromiseWaiting = Promise.all(allPromise);
+    allPromiseWaiting.finally(() => {
+        showAlignDialog.value = false;
+        checked.value = [];
     })
 }
 
