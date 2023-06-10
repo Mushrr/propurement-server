@@ -87,10 +87,9 @@ async function userSearchHandler(ctx: Context) {
     const db = ctx.state.db as Db;
     const propurementCollection = db.collection("propurement");
     const req = ctx.request.query || {};
-    const query = extractObject(req, ["openid", "page", "pageSize"]);
-    
-    const finalQuery = extractObject(query, ['category', 'unit', 'uuid[]'])
-
+    const query = extractObject(req, ["openid", "page", "pageSize"]); 
+    const finalQuery = extractObject(query, ['category', 'unit', 'uuid[]']);
+    logger.info(JSON.stringify(finalQuery));
     if (query.category) {
         finalQuery.category = {
             $elemMatch: {
@@ -99,13 +98,21 @@ async function userSearchHandler(ctx: Context) {
         }
     }
 
-    if (hasProperties(finalQuery, ['uuid[]'])) {
-        finalQuery.uuid = {
-            $in: finalQuery['uuid[]']
+    if (query.name) {
+        finalQuery.name = {
+            $regex: new RegExp(`.*${query.name}.*`)
         }
-
+    }
+    
+    if (hasProperties(query, ['uuid[]'])) {
+        if (isString(query['uuid[]'])) {
+            query['uuid[]'] = [query['uuid[]'] as string]
+        }
+        logger.info(JSON.stringify(query['uuid[]']))
+        finalQuery.uuid = {
+            $in: query['uuid[]']
+        }
         const data = await propurementCollection.find(finalQuery).toArray();
-        
         ctx.body = {
             code: 200,
             message: "获取物品信息成功",
@@ -167,11 +174,23 @@ async function agentSearchHandler(ctx: Context) {
         const isUserValidate = await validateUser(req.openid as string, ctx);
         if (isUserValidate === "agent") {
             const data = []
-            const cursor = itemsCollection.find({
-                agentOpenid: req.openid,
-                state: req.state || "waiting"
-                // 分配给当前代理的所有正在等待的item
-            })
+            const queryObj: Record<string, string> = {
+                agentOpenid: req.openid as string,
+            }
+
+            if (req.state && req.state !== "") {
+                queryObj["state"] = req.state as string
+            } else if (req.state === "") {
+                queryObj["state"] = {
+                    $in: ["agent-accept", "waiting", "agent-refuse", "distributing"]
+                }
+            }
+
+            if (req.transitionId && req.transitionId !== "") {
+                queryObj["transitionId"] = req.transitionId as string
+            }
+
+            const cursor = itemsCollection.find(queryObj)
 
             for await (const item of cursor) {
                 data.push(item)

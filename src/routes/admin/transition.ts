@@ -28,7 +28,7 @@ transitionRoute.get("/", async (ctx, next) => {
                 {
                     sort: {
                         lastModified: -1
-                    }
+                    },
                 }
             );
             const itemsData = [];
@@ -47,6 +47,7 @@ transitionRoute.get("/", async (ctx, next) => {
                 for await (const items of itemsCursor) {
                     if (ind >= start) {
                         itemsData.push(items);
+                        console.log(query, items)
                     }
                     ind += 1;
                     if (ind >= end) {

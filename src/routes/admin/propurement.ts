@@ -113,15 +113,27 @@ adminPropurementRoute.post("/", async (ctx, next) => {
                         updateRatio(ctx, propurement.defaultUnits, "unit");
                         updateRatio(ctx, propurement.brand as string, "brand");
                         updateRatio(ctx, propurement.category, "category");
+                        
+                        // find if exist
+                        const propurementExist = await propurementCollection.findOne({name: propurement.name})
+                        
+                        if (propurementExist?._id) {
+                            ctx.body = {
+                                code: 401,
+                                message: `插入错误，重复的项${propurement.name}`
+                            }
+                            ctx.status = 401;
+                        } else {
+                            const insertAns = await propurementCollection.insertOne(propurementSchema);
 
-                        const insertAns = await propurementCollection.insertOne(propurementSchema);
+                            logger.info(`[${propurementSchema.name} | ${propurement.defaultUnits.join("|")}] 添加成功!`);
 
-                        logger.info(`[${propurementSchema.name} | ${propurement.defaultUnits.join("|")}] 添加成功!`);
-
-                        ctx.body = {
-                            code: 200,
-                            propurement: await propurementCollection.findOne({ uuid: propurementSchema.uuid })
+                            ctx.body = {
+                                code: 200,
+                                propurement: await propurementCollection.findOne({ uuid: propurementSchema.uuid })
+                            }
                         }
+
                     } else {
                         propurementErrorHandler(" name defaultPrice category");
                     }

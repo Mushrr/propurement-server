@@ -7,6 +7,7 @@ import Route from "koa-router";
 import { extractObject, hasProperties, objectStringSchema, objectToMongoUpdateSchema, timePlus, Week, isSuperAdmin } from '@utils/base';
 import logger from '@utils/logger';
 import { UserInfo } from '@locTypes/user';
+import { isString } from 'mushr';
 
 
 const adminUserRoute = new Route();
@@ -24,8 +25,12 @@ adminUserRoute.get("/", async (ctx, next) => {
     const req = ctx.request.query || {};
     if (hasProperties(req, ["openid"])) {
         const userValidate = await validateUser(req.openid as string, ctx);
-        if (userValidate === "admin" || isSuperAdmin(req.openid as string)) {
+        if (userValidate === "admin" || userValidate === "agent" || isSuperAdmin(req.openid as string)) {
+            if (isString(req['uesrOpenid[]'])) {
+                req['uesrOpenid[]'] = [req['uesrOpenid[]'] as string]
+            }
             if (hasProperties(req, ['userOpenid[]']) && Array.isArray(req['userOpenid[]'])) {
+                logger.info(`用户的openid list ${JSON.stringify(req['userOpenid[]'])}`)
                 const query = extractObject(req, ["openid", "page", "pageSize", "userOpenid", "userOpenid[]"]) || {};
                 const data = await userCollection.find({
                     openid: {
