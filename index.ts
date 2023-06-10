@@ -13,8 +13,9 @@ dotenv.config();
 const app = new Koa();
 
 if (process.env.NODE_ENV === "development") {
-    app.use(cors); // 跨源请求
+    // 跨源请求
 }
+app.use(cors); 
 
 // logger
 app.use(logger((str) => {
