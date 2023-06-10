@@ -4,9 +4,7 @@ import { Context } from 'koa';
 // User Route
 import Router from "koa-router";
 import { hasProperties } from '../utils/base';
-import { getWxUserOpenid } from '../utils/fetchTools';
 import logger from '@utils/logger';
-import { UserInfo } from "@locTypes/user"
 import { v4 } from 'uuid';
 
 

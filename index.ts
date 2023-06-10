@@ -15,7 +15,7 @@ const app = new Koa();
 if (process.env.NODE_ENV === "development") {
     // 跨源请求
 }
-app.use(cors); 
+app.use(cors);
 
 // logger
 app.use(logger((str) => {
