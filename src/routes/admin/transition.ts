@@ -87,6 +87,7 @@ transitionRoute.get("/", async (ctx, next) => {
  */
 transitionRoute.post("/", async (ctx, next) => {
     const req = ctx.request.body || {};
+    console.log(req);
     if (hasProperties(req, ["openid", "transitionId", "transition"])) {
         const userValidate = await validateUser(req.openid as string, ctx);
         if (userValidate === "admin") {
