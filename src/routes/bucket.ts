@@ -56,6 +56,7 @@ bucketRoute.post("/", async (ctx, next) => {
         if (userValidate === "user" || userValidate === "admin") {
             const itemsCollection = await getCollection(ctx, "items");
             if (req.lastModified) {
+                console.log(req.lastModified);
                 itemsCollection.updateMany({
                     openid: req.openid,
                     transitionId: process.env.DEFAULT_ORDERID

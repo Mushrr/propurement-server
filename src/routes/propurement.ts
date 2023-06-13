@@ -264,13 +264,15 @@ async function userChangeHandler(ctx: Context) {
             const purchaseRecord: PurchaseRecord = {
                 uuid: req.uuid,
                 openid: req.openid,
-                transitionId: process.env.DEFAULT_ORDERID as string,
+                transitionId: req.transitionId || process.env.DEFAULT_ORDERID as string,
                 propurename: req.propurename || "", 
                 number: detail.number,
                 unit: detail.unit || "个",
                 userComment: detail.comment || "",
-                state: "uncommitted",
-                isFree: false // 默认是false，并非是免配送的
+                state: req.state || "uncommitted",
+                isFree: false, // 默认是false，并非是免配送的,
+                agentOpenid: req.agentOpenid || "",
+                lastModified: req.lastModified ? new Date(req.lastModified).getTime() : Date.now(),
             }
             if (detail.isFree) {
                 purchaseRecord.isFree = Boolean(detail.isFree);
@@ -281,7 +283,7 @@ async function userChangeHandler(ctx: Context) {
             const primaryKey = {
                 uuid: req.uuid,
                 openid: req.openid,
-                transitionId: process.env.DEFAULT_ORDERID as string,
+                transitionId: req.transitionId || process.env.DEFAULT_ORDERID as string,
             };
             const result = await itemsCollection.findOne(primaryKey);
 
@@ -536,7 +538,7 @@ propurementRoute.del("/", async (ctx, next) => {
         const ans = await itemCollection.findOneAndDelete({
             uuid: req.uuid,
             openid: req.openid,
-            transitionId: process.env.DEFAULT_ORDERID
+            transitionId: req.transitionId || process.env.DEFAULT_ORDERID
         })
         if (ans.ok) {
             ctx.body = {
