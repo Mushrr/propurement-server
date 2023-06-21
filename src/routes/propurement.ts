@@ -278,7 +278,6 @@ async function userChangeHandler(ctx: Context) {
                 purchaseRecord.isFree = Boolean(detail.isFree);
             }
 
-
             // upload
             const primaryKey = {
                 uuid: req.uuid,
@@ -288,6 +287,11 @@ async function userChangeHandler(ctx: Context) {
             const result = await itemsCollection.findOne(primaryKey);
 
             if (result) {
+                
+                if (detail.price) {
+                    purchaseRecord.price = detail.price;
+                }
+
                 if (purchaseRecord.number === 0) {
                     await itemsCollection.deleteOne(primaryKey); // 删除记录
                     logger.info(`${ctx.request.ip} 删除了一条订单记录!`);
@@ -304,6 +308,19 @@ async function userChangeHandler(ctx: Context) {
                     logger.info(`${ctx.request.ip} 更新了一条订单记录!`);
                 }
             } else {
+
+                
+                // 如果发现该用户有历史价格，则直接使用历史价格
+                // 仅仅在用户尝试插入的时候，才会使用历史价格
+                console.log(propurementExist.userPrice.user, '😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️');
+                for (const price of propurementExist.userPrice.user) {
+                    if (price.openid === req.openid && price.unit === purchaseRecord.unit) {
+                        purchaseRecord.price = price.price;
+                        logger.info(`${ctx.request.ip} 通过历史价格 ${price.price} 为 ${objectStringSchema(purchaseRecord)} 设置了价格`);
+                        break;
+                    }
+                }
+
                 await itemsCollection.insertOne({
                     ...purchaseRecord,
                 })

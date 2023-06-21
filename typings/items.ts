@@ -21,7 +21,8 @@ interface UserItemDetail {
     unit: string, // 单位
     number: number, // 数量
     comment: GoodDocument | string | null, // 可以是富文本，也可以是单纯的字符串
-    isFree: boolean
+    isFree: boolean,
+    price?: number, // 代理给出的价格 
 }
 
 // 代理的修改意见
