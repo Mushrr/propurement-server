@@ -312,12 +312,13 @@ async function userChangeHandler(ctx: Context) {
                 
                 // 如果发现该用户有历史价格，则直接使用历史价格
                 // 仅仅在用户尝试插入的时候，才会使用历史价格
-                console.log(propurementExist.userPrice.user, '😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️😶‍🌫️');
-                for (const price of propurementExist.userPrice.user) {
-                    if (price.openid === req.openid && price.unit === purchaseRecord.unit) {
-                        purchaseRecord.price = price.price;
-                        logger.info(`${ctx.request.ip} 通过历史价格 ${price.price} 为 ${objectStringSchema(purchaseRecord)} 设置了价格`);
-                        break;
+                if (propurementExist.userPrice) {
+                    for (const price of propurementExist.userPrice.user) {
+                        if (price.openid === req.openid && price.unit === purchaseRecord.unit) {
+                            purchaseRecord.price = price.price;
+                            logger.info(`${ctx.request.ip} 通过历史价格 ${price.price} 为 ${objectStringSchema(purchaseRecord)} 设置了价格`);
+                            break;
+                        }
                     }
                 }
 
