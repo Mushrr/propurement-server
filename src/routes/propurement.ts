@@ -22,7 +22,6 @@ import { agentStates } from 'config';
 
 const propurementRoute = new Route();
 
-
 /**
  * 分权处理
  * @param queryBody 请求体
@@ -251,7 +250,6 @@ async function userChangeHandler(ctx: Context) {
     const req = ctx.request.body || {};
     if (hasProperties(req, ["openid", "uuid", "detail"])) {
         const detail: UserItemDetail = isObject(req.detail) ? req.detail : {};
-        
         const propurementExist = await propurementCollection.findOne({
             uuid: req.uuid,
         });
