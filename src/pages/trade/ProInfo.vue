@@ -69,12 +69,12 @@
                     </ElTag>
                 </ElDescriptionsItem>
             </ElDescriptions>
-            <el-button @click="showHistory = !showHistory">展开物品历史价格</el-button>
+            <el-button @click="showHistory = !showHistory">展开物品历史单价</el-button>
             <template v-if="showHistory">
                 <el-table :data="currentPro.data.userPrice.user">
                     <el-table-column prop="openid" label="微信Openid"></el-table-column>
                     <el-table-column prop="unit" label="单位"></el-table-column>
-                    <el-table-column prop="price" label="价格"></el-table-column>
+                    <el-table-column prop="price" label="单价"></el-table-column>
                 </el-table>
             </template>
         </template>

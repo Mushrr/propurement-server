@@ -84,7 +84,7 @@
                             <el-tag v-else type="danger">否</el-tag>
                         </template>
                     </el-table-column>
-                    <el-table-column label="历史报价">
+                    <el-table-column label="历史报价(单价)">
                         <template #default="scope">
                             <div v-for="price in scope.row.lastPrice">
                                 <el-tag v-if="price.unit === scope.row.unit">
@@ -100,12 +100,17 @@
                     </el-table-column>
                 </el-table>
                 <div v-if="isError">
-                    总计: {{ totalPrice }}, 有{{ nums }}个产品没有价格
+                    总计: {{ totalPrice }}, 有{{ nums }}个产品没有单价
                 </div>
                 <div v-else class="text-2xl text-red">
                     总计: {{ totalPrice }}
                 </div>
-                <el-button @click="submitBucket">提交</el-button>
+                <div flex flex-row items-center justify-between>
+                    <ElDatePicker v-model="transitionTime" placeholder="选择时间" 
+                    type="datetime" value-format="YYYY-MM-DD HH:mm:ss"></ElDatePicker>
+                    <el-button @click="submitBucket" class="w-50%">提交</el-button>
+                </div>
+                {{ transitionTime }}
             </div>
         </div>
     </el-dialog>
@@ -163,7 +168,8 @@ import {
     ElTable, ElTableColumn, ElButton, ElDialog, ElTag, ElDescriptions,
     ElDescriptionsItem, ElSelect, ElOption, ElForm, ElFormItem,
     ElInput, ElPagination, ElRadioGroup, ElRadioButton, ElInputNumber,
-    ElMessage
+    ElMessage,
+ElDatePicker
 } from 'element-plus';
 import { Ref, ref, watch } from 'vue'
 import request from '../../request';
@@ -294,7 +300,6 @@ const getPropurementData = ({ category }: { category: string }) => {
         console.log(res.data.data);
         currentPropurementData.value = res.data.data;
     })
-
 }
 
 const getCategories = () => {
@@ -498,7 +503,7 @@ const deleteItem = (data) => {
         {
             params: {
                 uuid: data.uuid,
-                openid: data.openid
+                openid: data.openid,
             }
         }
     ).then(res => {
@@ -507,12 +512,14 @@ const deleteItem = (data) => {
     })
 }
 
+const transitionTime = ref();
 const submitBucket = () => {
     // submitBucket
     request.post(
         '/bucket',
         {
-            openid: currentUserInfo.value.openid
+            openid: currentUserInfo.value.openid,
+            lastModified: new Date(transitionTime.value).getTime(),
         }
     ).then(res => {
         ElMessage.success("提交订单成功");

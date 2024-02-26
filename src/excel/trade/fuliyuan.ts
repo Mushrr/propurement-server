@@ -11,7 +11,7 @@ import { HistoryData } from "../typings";
  * @param fracId 分号
  * @returns 
  */
-export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: number,
+export default function fuliyuanTrade(data: HistoryData[], tradeId: number, fracId: number,
     date: Date, company: string, principal: string, title: string = '湖北溪河源农业开发有限公司') {
     const xhyTradeData: any[] = [];
     // header
@@ -79,18 +79,19 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
     // footer
 
     xhyTradeData.push([
-        `采购人：${principal}   证明人： `,
-        "",
+        `采购人：${principal} `,
+        `送货人：`,
         "",
         "",
         `大写：${convertCurrency(summary)}`,
+        "",
         ""
     ])
     console.log(xhyTradeData);
     return xhyTradeData;
 }
 
-export function xhyStyle(sheet: Sheet) {
+export function fuliyuanStyle(sheet: Sheet) {
     const range = XLSX.utils.decode_range(sheet['!ref']!);
 
     sheet["!margins"] = {
@@ -138,7 +139,7 @@ export function xhyStyle(sheet: Sheet) {
         },
         {
             s: {
-                c: 0,
+                c: 1,
                 r: 17
             },
             e: {

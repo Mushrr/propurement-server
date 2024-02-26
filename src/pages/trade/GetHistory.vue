@@ -49,7 +49,7 @@
             <el-select v-model="querySchema.excelType">
                 <el-option key="2" label="配送单" value="表单"></el-option>
                 <el-option key="1" label="月度汇总" value="月数据" default></el-option>
-                <el-option key="3" label="财务系统表" value="财务系统表"></el-option>
+                <el-option key="3" label="销售登记表" value="财务系统表"></el-option>
             </el-select>
         </el-form-item>
         <el-form-item label="发票单位">
@@ -68,8 +68,30 @@
                 </div>
             </el-select>
         </el-form-item>
+        <el-form-item label="公司抬头">
+            <el-select v-model="querySchema.companyTitle">
+                <el-option key="" value="" label="未选择"></el-option>
+                <el-option
+                    v-for="companyTitleOption in config.companyTitle"
+                    :key="companyTitleOption"
+                    :label="companyTitleOption"
+                    :value="companyTitleOption"
+                    >
+                </el-option>
+            </el-select>
+        </el-form-item>
         <el-form-item label="采购人">
             <el-input v-model="principal" type="string"></el-input>
+        </el-form-item>
+        <el-form-item label="导出格式">
+            <el-select v-model="excelFormat">
+                <el-option key="" value="" label="自动选择" default/>
+                <el-option v-for="option in Object.keys(config.excelExtractMapping)" 
+                    :key="option" 
+                    :value="option" 
+                    :label="option">
+                </el-option>
+            </el-select>
         </el-form-item>
         <el-form-item label="导出Excel">
             <el-button @click="extractAsExcel">导出</el-button>
@@ -117,14 +139,14 @@
                 </ElTag>
             </template>
         </el-table-column>
-        <el-table-column label="代理人报价" width="100">
+        <el-table-column label="代理人报价(单价)" width="100">
             <template #default="scope">
                 <ElTag v-if="scope.row.agentDetail">
                     {{ scope.row.agentDetail.price }}￥ / {{ scope.row.agentDetail.unit }}
                 </ElTag>
             </template>
         </el-table-column>
-        <el-table-column label="我方报价" width="100">
+        <el-table-column label="我方报价(单价)" width="100">
             <template #default="scope">
                 <ElTag>
                     {{ scope.row.price }}￥/ {{ scope.row.unit }}
@@ -186,12 +208,13 @@ import {
 } from 'element-plus';
 import { Ref, ref, watch } from 'vue'
 import request from '../../request';
-import * as xlsx from 'xlsx'
+import * as xlsx from 'xlsx-js-style'
 import monthSummaryExcel from '../../excel/monthSummaryExcel';
 import monthGroupExcel from '../../excel/monthGroupExcel';
 import save from '../../excel/save';
-import { xhyTrade, XLSX, xhyStyle } from '../../excel/excel';
+import { XLSX } from '../../excel/excel';
 import Usage from '../../components/Usage.vue'
+import config from '../../config';
 
 type UserType = "admin" | "agent" | "user" | null;
 
@@ -247,7 +270,8 @@ interface QuerySchema {
     category?: string;
     isFree?: boolean,
     company: string,
-    excelType: "月数据" | "表单" | "财务系统表"
+    excelType: "月数据" | "表单" | "财务系统表",
+    companyTitle: string
 }
 
 interface PurchaseRecord {
@@ -292,7 +316,7 @@ watch(querySchema.value, (newVal, oldVal) => {
     pageIndex.value = 1; // 重置
     const queryObj: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
-        if (value === '' || key === 'excelType' || key === 'company') {
+        if (value === '' || key === 'excelType' || key === 'company' || key === 'companyTitle') {
             continue
         } else {
             queryObj[key] = value;
@@ -374,84 +398,27 @@ const getPorpurement = (uuid: string | string[]) => {
     )
 }
 
-// v1
-// @ts-ignore
-const bindItemData = async (item) => {
-    const buyerInfo = (await getUserInfo('user', { userOpenid: item.openid })).data.data as AnyObject;
-    if (buyerInfo.length === 1) {
-        item.buyer = buyerInfo[0];
-    } else {
-        item.buyer = {
-            openid: "未知", organization: {
-                company: "未知",
-                principal: "未知",
-                department: "未知",
-                position: "未知",
-                phone_number: "未知"
-            }
-        }
-    }
-    console.log(item);
-    // 代理信息
-    const agentInfo = (await getUserInfo('agent', { userOpenid: item.agentOpenid })).data.data as AnyObject;
-    if (agentInfo.length === 1) {
-        item.agent = agentInfo[0];
-    } else if (Boolean(item.isFree)) {
-        item.agent = {
-            openid: "未知", organization: {
-                company: "未知",
-                principal: "未知",
-                department: "未知",
-                position: "未知",
-                phone_number: "未知"
-            }
-        }
-    } else {
-        ElMessage.error(`获取${item.agentOpenid}信息失败`);
-        item.agent = {
-            openid: "未知", organization: {
-                company: "未知",
-                principal: "未知",
-                department: "未知",
-                position: "未知",
-                phone_number: "未知"
-            }
-        }
-    }
-
-    // 物品信息
-
-    const propurementInfo = (await getPorpurement(item.uuid)).data.data[0] || {};
-    item.propurement = propurementInfo || {
-        uuid: "未知",
-        name: "未知",
-        unit: "未知",
-        price: 0,
-        category: "未知",
-        openid: "未知",
-        lastPrice: []
-    };
-}
-
 // bindItem v2
 
 const bindItemList = async (itemList: PurchaseRecord[]) => {
     const allUserOpenid = itemList.map(item => item.openid);
     const allAgentOpenid = itemList.map(item => item.agentOpenid);
     const allUUID = itemList.map(item => item.uuid);
-
+    console.log('当前页面的交易信息', itemList);
+    console.log("所有的用户openid", allUserOpenid);
+    console.log("所有的代理openid", allAgentOpenid);
+    console.log("所有的物品uuid", allUUID);
     const allUsers = (await getUserInfo('user', { userOpenid: allUserOpenid })).data.data || [];
     const allAgents = (await getUserInfo('agent', { userOpenid: allAgentOpenid })).data.data || [];
     const allPropurements = (await getPorpurement(allUUID)).data.data || [];
 
-
+    console.log(allUsers, allAgents, allPropurements);
     for (const item of itemList) {
         // user
         let userFind = false;
         let agentFind = false;
         let propurementFind = false;
         for (const user of allUsers) {
-
             if (user.openid === item.openid) {
                 item.buyer = user;
                 userFind = true;
@@ -460,7 +427,6 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
         }
 
         for (const agent of allAgents) {
-
             if (agent.openid === item.agentOpenid) {
                 item.agent = agent;
                 agentFind = true;
@@ -469,10 +435,10 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
         }
 
         for (const propurement of allPropurements) {
-
             if (propurement.uuid === item.uuid) {
                 item.propurement = propurement;
                 propurementFind = true;
+                console.log('这里', propurement);
                 break;
             }
         }
@@ -512,7 +478,6 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
             }
         }
     }
-
 }
 
 const principal = ref('');
@@ -521,36 +486,99 @@ watch(() => data.value, async (newVal, oldVal) => {
     bindItemList(newVal);
 })
 
+function transformTime(date: Date, formatter = 'yyyy-MM-dd hh:mm:ss') {
+    const o: any = {
+        "M+": date.getMonth() + 1, //month
+        "d+": date.getDate(), //day
+        "h+": date.getHours(), //hour
+        "m+": date.getMinutes(), //minute
+        "s+": date.getSeconds(), //second
+    };
+    if (/(y+)/.test(formatter)) {
+        formatter = formatter.replace(
+            RegExp.$1,
+            (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+        );
+    }
+    if (/(S+)/.test(formatter)) {
+        formatter = formatter.replace(
+            RegExp.$1,
+            ("000" + date.getMilliseconds()).substr(
+                ("000" + date.getMilliseconds()).length - RegExp.$1.length
+            )
+        );
+    }
+    for (let k in o) {
+        if (new RegExp("(" + k + ")").test(formatter)) {
+            formatter = formatter.replace(
+                RegExp.$1,
+                RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
+            );
+        }
+    }
+    return formatter;
+}
+
 const tradeId = ref(1);
+const excelFormat: Ref<string> = ref('');
 
 function exportExcel(data: any, name: string, page: number) {
     let book = null;
     switch (querySchema.value.excelType) {
         case "月数据":
             book = monthSummaryExcel(data);
-            save(book, `${name}.xlsx`);
+            save(book, `${querySchema.value.company}月度汇总表.xlsx`);
             break;
         case "表单":
             let ind = 0;
+            console.log(data.length);
             const maxInd = Math.ceil(data.length / 13);
-            if (querySchema.value.company) {
+            if (querySchema.value.company && querySchema.value.companyTitle !== '') {
+                let xhyTrade: Function;
+                let xhyStyle: Function;
+                let found: boolean = false;
+                for (const key of Object.keys(config.excelExtractMapping)) {
+                    if (querySchema.value.company.indexOf(key) > -1) {
+                        // @ts-ignore
+                        xhyTrade = config.excelExtractMapping[key]['trade'],
+                        // @ts-ignore
+                        xhyStyle = config.excelExtractMapping[key]['style']
+                        console.log(key);
+                        found = true;
+                        break;
+                    }
+                }
+
+                // 如果选择了表单格式，那么以选择的表单格式为标准，否则为自动选择
+                if (excelFormat.value !== '') {
+                    // @ts-ignore
+                    xhyStyle = config.excelExtractMapping[excelFormat.value as string]['style'];
+                    // @ts-ignore
+                    xhyTrade = config.excelExtractMapping[excelFormat.value as string]['trade'];
+                    found = true;
+                }
+
+                if (!found) {
+                    xhyTrade = config.excelExtractMapping['默认']['trade'];
+                    xhyStyle = config.excelExtractMapping['默认']['style'];
+                }
+                console.log(maxInd)
                 for (; ind < maxInd; ind ++) {
                     const locData = data.slice(ind * 13, (ind + 1) * 13);
-                    const arrayData = xhyTrade(locData, tradeId.value, ind+1, new Date(locData[0].lastModified), querySchema.value.company, principal.value);
-                    const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
+                    const arrayData = xhyTrade!(locData, tradeId.value, ind+1, new Date(locData[0].lastModified), querySchema.value.company, principal.value, querySchema.value.companyTitle);
+                    console.log('表格数据', arrayData);
+                    const sheet = xhyStyle!(XLSX.utils.aoa_to_sheet(arrayData));
                     const book = XLSX.utils.book_new();
-
                     XLSX.utils.book_append_sheet(book, sheet, '订单');
-
-                    save(book, `${querySchema.value.company}-${tradeId.value}-${ind+1}.xlsx`);
+                    save(book, `${transformTime(new Date(locData[0].lastModified))}-${querySchema.value.company}-${tradeId.value}-${ind+1}.xlsx`);
                 }
             } else {
-                ElMessage.error("请选择开票单位");
+                ElMessage.error("请选择开票单位 以及 公司抬头");
             }
             break;
         case "财务系统表":
             book = monthGroupExcel(data);
-            save(book, `${name}.xlsx`);
+            save(book, `${querySchema.value.company}销售登记表.xlsx`);
             ElMessage.success('导出成功');
             break;
         default:
@@ -565,7 +593,7 @@ async function extractAsExcel() {
     const query: AnyObject = {};
     for (const [key, value] of Object.entries(querySchema.value)) {
         console.log(key);
-        if (value !== '' && key !== 'excelType' && key !== 'company') {
+        if (value !== '' && key !== 'excelType' && key !== 'company' && key !== 'companyTitle') {
             query[key] = value;
         }
     }

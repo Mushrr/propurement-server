@@ -2,7 +2,7 @@
 import monthDaySummary from "./monthDaySummary";
 import monthSummary from "./monthSummary";
 import { HistoryData } from "./typings";
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 function standardSheetStyle(sheet: any) {
     const range = XLSX.utils.decode_range(sheet['!ref']);
@@ -98,7 +98,7 @@ export default function monthSummaryExcel(data: HistoryData[]) {
     standardSheetStyle(monthSheet);
 
     XLSX.utils.book_append_sheet(book, monthSheet, '汇总');
-    XLSX.utils.book_append_sheet(book, daySheet, '每日明分');
+    XLSX.utils.book_append_sheet(book, daySheet, '每日明细');
 
     // 汇总和每日细分的样式
 

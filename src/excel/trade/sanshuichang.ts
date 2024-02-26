@@ -1,3 +1,5 @@
+// 三水场
+
 // 溪河源开发有限公司
 import { Sheet } from "xlsx-js-style";
 import { convertCurrency } from "../base";
@@ -11,7 +13,7 @@ import { HistoryData } from "../typings";
  * @param fracId 分号
  * @returns 
  */
-export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: number,
+export default function shuichangTrade(data: HistoryData[], tradeId: number, fracId: number,
     date: Date, company: string, principal: string, title: string = '湖北溪河源农业开发有限公司') {
     const xhyTradeData: any[] = [];
     // header
@@ -90,19 +92,8 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
     return xhyTradeData;
 }
 
-export function xhyStyle(sheet: Sheet) {
+export function shuichangStyle(sheet: Sheet) {
     const range = XLSX.utils.decode_range(sheet['!ref']!);
-
-    sheet["!margins"] = {
-        top: 0.43,
-        bottom: 2.54,
-        footer: 1.27,
-        header: 0.43,
-        left: 0.41,
-        right: 0.41,
-    }
-
-    // wide
 
     // merge
     sheet["!merges"] = [
@@ -118,27 +109,17 @@ export function xhyStyle(sheet: Sheet) {
         },
         {
             s: {
-                c: 0,
-                r: 1
-            },
-            e: {
-                c: 3,
-                r: 1
-            },
-        },
-        {
-            s: {
                 c: 4,
                 r: 1
             },
             e: {
-                c: 6,
+                c: 5,
                 r: 1
             }
         },
         {
             s: {
-                c: 0,
+                c: 2,
                 r: 17
             },
             e: {
@@ -148,7 +129,7 @@ export function xhyStyle(sheet: Sheet) {
         },
         {
             s: {
-                c: 4,
+                c: 5,
                 r: 17
             },
             e: {
@@ -202,7 +183,7 @@ export function xhyStyle(sheet: Sheet) {
                             horizontal: "center",
                         },
                         font: {
-                            sz: 21,
+                            sz: 20,
                         }
                     }
                 }
@@ -214,9 +195,9 @@ export function xhyStyle(sheet: Sheet) {
                         }
                     };
 
-                    if (C === 0) {
+                    if (C === 0 || C === 4) {
                         cell.s.alignment = {
-                            horizontal: "left"
+                            horizontal: "right"
                         }
                     }
                     if (C === 6) {

@@ -1,7 +1,10 @@
+import { write, writeFile } from 'xlsx-js-style'
+
 export default function save(book: any, name: string) {
     function downloadExcel() {
+        console.log('正在保存')
         // @ts-ignore
-        const out = XLS.write(book, { bookType: 'xlsx', bookSST: false, type: 'binary' });
+        const out = write(book, { bookType: 'xlsx', bookSST: false, type: 'binary' });
         function saveAs(blob: Blob, name: string) {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
@@ -19,5 +22,7 @@ export default function save(book: any, name: string) {
         /* the saveAs call downloads a file on the local machine */
         saveAs(new Blob([s2ab(out)], { type: "" }), name)
     }
-    downloadExcel();
+    // downloadExcel();
+    console.warn("最后的表格如下", book);
+    writeFile(book, name)
 }

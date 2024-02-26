@@ -1,8 +1,5 @@
 <template>
-    {{ checked }}
-    {{ showAlignDialog }}
     <div class="flex flex-row justify-center items-center">
-
         <div class="flex flex-col items-center">
             <el-tag class="">
                 订单状态状态
@@ -15,7 +12,9 @@
                 <el-radio-button label="user-refuse">用户拒收</el-radio-button>
                 <el-radio-button label="finished">完成</el-radio-button>
             </el-radio-group>
-            <el-button @click="showAlignDialog = true">委派</el-button>
+            <el-button v-if="state === 'waiting'" @click="showAlignDialog = true">委派</el-button>
+            <el-button v-if="state !== 'waiting'" @click="showDistDialog = true">批量修改状态</el-button>
+            <div v-else></div>
         </div>
     </div>
     <div v-if="state === 'waiting'">
@@ -28,8 +27,22 @@
                 </el-table-column>
                 <el-table-column label="商品名称" prop="propurename"></el-table-column>
                 <el-table-column label="交易单号" prop="transitionId"></el-table-column>
-                <el-table-column label="购买者Openid" prop="openid"></el-table-column>
-                <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
+                <!-- <el-table-column label="购买者Openid" prop="openid"></el-table-column> -->
+                <el-table-column label="购买者">
+                    <template #default="scope">
+                        <div>
+                            <ElTag v-if="scope.row.user">
+                                {{ scope.row.user.organization.company }}
+                            </ElTag>
+                            <ElTag v-else>
+                                请求中~
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="订单配送时间">
+                    <template #default="scope">{{ transformTime(new Date(scope.row.lastModified))}}</template>
+                </el-table-column>
                 <el-table-column label="单位" width="80">
                     <template #default="scope">
                         <ElTag>
@@ -61,7 +74,7 @@
                                     {{ price.price }}￥ /{{ price.unit }}
                                 </ElTag>
                                 <ElTag>
-                                    总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
+                                    总计: {{ (parseFloat(`${price.price}`) * parseFloat(`${scope.row.number}`)).toFixed(2) }}￥
                                 </ElTag>
                             </template>
                         </div>
@@ -101,138 +114,165 @@
     </div>
     <div
         v-else-if="state === 'agent-accept' || state === 'agent-refuse' || state === 'distributing' || state === 'finished' || state === 'user-refuse'">
-        <el-table :data="data">
-            <el-table-column label="交易单号" prop="transitionId"></el-table-column>
-            <el-table-column label="商品名称" prop="propurename"></el-table-column>
-            <el-table-column label="购买者Openid" prop="openid"></el-table-column>
-            <el-table-column label="订单配送时间" prop="lastModified"></el-table-column>
-            <el-table-column label="数量|单位" width="80">
-                <template #default="scope">
-                    <ElTag>
-                        {{ scope.row.number }} |
-                        {{ scope.row.unit }}
-                    </ElTag>
-                </template>
-            </el-table-column>
-            <el-table-column label="委派">
-                <template #default="scope">
-                    <template v-for="agent in agentInfo">
-                        <el-tag v-if="agent.openid === scope.row.agentOpenid">
-                            {{ agent.organization.company }}
-                        </el-tag>
+        <el-checkbox-group v-model="checked">
+            <el-table :data="data">
+                <el-table-column label="选择">
+                    <template #default="scope">
+                        <el-checkbox :label="scope.row._id"></el-checkbox>
                     </template>
-                </template>
-            </el-table-column>
-            <el-table-column label="价格">
-                <template #default="scope">
-                    <div v-for="price in scope.row.lastPrice">
-                        <template v-if="price.unit === scope.row.unit">
-                            <ElTag>
-                                {{ price.price }}￥ /{{ price.unit }}
+                </el-table-column>
+                <el-table-column label="交易单号" prop="transitionId"></el-table-column>
+                <el-table-column label="商品名称" prop="propurename"></el-table-column>
+                <!-- <el-table-column label="购买者Openid" prop="openid"></el-table-column> -->
+                <el-table-column label="购买者">
+                    <template #default="scope">
+                        <div>
+                            <ElTag v-if="scope.row.user">
+                                {{ scope.row.user.organization.company }}
                             </ElTag>
-                            <ElTag>
-                                总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
+                            <ElTag v-else>
+                                请求中~
                             </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="订单配送时间">
+                    <template #default="scope">{{ transformTime(new Date(scope.row.lastModified))}}</template>
+                </el-table-column>
+                <el-table-column label="数量|单位" width="80">
+                    <template #default="scope">
+                        <ElTag>
+                            {{ scope.row.number }} |
+                            {{ scope.row.unit }}
+                        </ElTag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="委派">
+                    <template #default="scope">
+                        <template v-for="agent in agentInfo">
+                            <el-tag v-if="agent.openid === scope.row.agentOpenid">
+                                {{ agent.organization.company }}
+                            </el-tag>
                         </template>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="代理备注" v-if="state !== 'agent-refuse'">
-                <template #default="scope">
-                    <div>
-                        <ElTag v-if="scope.row.agentDetail && scope.row.agentDetail.comment">
-                            {{ scope.row.agentDetail.comment }}
-                        </ElTag>
-                        <ElTag v-else>
-                            无
-                        </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="代理报价" v-if="state !== 'agent-refuse'">
-                <template #default="scope">
-                    <div>
-                        <ElTag v-if="scope.row.agentDetail">
-                            {{ scope.row.agentDetail.price }}￥/ {{ scope.row.agentDetail.unit }}
-                        </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="预计收益" v-if="state !== 'agent-refuse'">
-                <template #default="scope">
-                    <div v-if="scope.row.agentDetail && scope.row.agentDetail.unit === scope.row.unit">
+                    </template>
+                </el-table-column>
+                <el-table-column label="单价">
+                    <template #default="scope">
                         <div v-for="price in scope.row.lastPrice">
                             <template v-if="price.unit === scope.row.unit">
-                                <div v-if="price.price > scope.row.agentDetail.price">
-                                    <ElTag type="success">
-                                        {{ (Number(price.price - scope.row.agentDetail.price)).toFixed(2) }}￥ /{{ price.unit }}
-                                    </ElTag>
-                                    <ElTag type="success">
-                                        总计: {{ ((Number(price.price - scope.row.agentDetail.price)) *
-                                        scope.row.number).toFixed(2) }}￥
-                                    </ElTag>
-                                </div>
-                                <div v-else>
-                                    <ElTag type="warning">
-                                        {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
-                                    </ElTag>
-                                    <ElTag type="warning">
-                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
-                                        scope.row.number).toFixed(2) }}￥
-                                    </ElTag>
-                                </div>
+                                <ElTag>
+                                    {{ price.price }}￥ /{{ price.unit }}
+                                </ElTag>
+                                <ElTag>
+                                    总计: {{ (parseFloat(`${price.price}`) * parseFloat(`${scope.row.number}`)).toFixed(2) }}￥
+                                </ElTag>
                             </template>
                         </div>
-                    </div>
-                    <div v-else>
-                        <ElTag type="info">
-                            给出的单位与代理人不一致，或者代理人信息缺失
-                        </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="拒绝理由" v-if="state === 'agent-refuse'">
-                <template #default="scope">
-                    <div>
-                        <ElTag v-if="scope.row.agentDetail.comment">
-                            {{ scope.row.agentDetail.comment }}
-                        </ElTag>
-                        <ElTag v-else>
-                            无
-                        </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="免配送">
-                <template #default="scope">
-                    <div>
-                        <el-tag v-if="scope.row.isFree" type="danger">
-                            免配送
-                        </el-tag>
-                        <el-tag v-else>
-                            正常配送
-                        </el-tag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label='编辑'>
-                <template #default="scope">
-                    <div class="flex flex-row">
-                        <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-                    </div>
-                </template>
-            </el-table-column>
-        </el-table>
-
+                    </template>
+                </el-table-column>
+                <el-table-column label="代理备注" v-if="state !== 'agent-refuse'">
+                    <template #default="scope">
+                        <div>
+                            <ElTag v-if="scope.row.agentDetail && scope.row.agentDetail.comment">
+                                {{ scope.row.agentDetail.comment }}
+                            </ElTag>
+                            <ElTag v-else>
+                                无
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="代理报价(单价)" v-if="state !== 'agent-refuse'">
+                    <template #default="scope">
+                        <div>
+                            <ElTag v-if="scope.row.agentDetail">
+                                {{ scope.row.agentDetail.price }}￥/ {{ scope.row.agentDetail.unit }}
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="预计收益" v-if="state !== 'agent-refuse'">
+                    <template #default="scope">
+                        <div v-if="scope.row.agentDetail && scope.row.agentDetail.unit === scope.row.unit">
+                            <div v-for="price in scope.row.lastPrice">
+                                <template v-if="price.unit === scope.row.unit">
+                                    <div v-if="price.price > scope.row.agentDetail.price">
+                                        <ElTag type="success">
+                                            {{ (Number(parseFloat(String(price.price)) -
+                                                parseFloat(String(scope.row.agentDetail.price)))).toFixed(2) }}￥ /{{
+        price.unit
+    }}
+                                        </ElTag>
+                                        <ElTag type="success">
+                                            总计: {{ ((Number(parseFloat(String(price.price)) -
+                                                parseFloat(String(scope.row.agentDetail.price)))) *
+                                                scope.row.number).toFixed(2) }}￥
+                                        </ElTag>
+                                    </div>
+                                    <div v-else>
+                                        <ElTag type="warning">
+                                            {{ (Number(parseFloat(String(price.price)) -
+                                                parseFloat(String(scope.row.agentDetail.price)))).toFixed(2) }}￥ /{{
+        price.unit
+    }}
+                                        </ElTag>
+                                        <ElTag type="warning">
+                                            总计: {{ ((Number(parseFloat(String(price.price)) -
+                                                parseFloat(String(scope.row.agentDetail.price)))) *
+                                                scope.row.number).toFixed(2) }}￥
+                                        </ElTag>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div v-else>
+                            <ElTag type="info">
+                                给出的单位与代理人不一致，或者代理人信息缺失
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="拒绝理由">
+                    <template #default="scope">
+                        <div>
+                            <ElTag v-if="scope.row.agentDetail">
+                                {{ scope.row.agentDetail.comment }}
+                            </ElTag>
+                            <ElTag v-else>
+                                无
+                            </ElTag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="免配送">
+                    <template #default="scope">
+                        <div>
+                            <el-tag v-if="scope.row.isFree" type="danger">
+                                免配送
+                            </el-tag>
+                            <el-tag v-else>
+                                正常配送
+                            </el-tag>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label='编辑'>
+                    <template #default="scope">
+                        <div class="flex flex-row">
+                            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-checkbox-group>
     </div>
     <el-pagination :total="1000" v-model:current-page="currentPageIndex"></el-pagination>
     <el-dialog v-model="dialogVisible" :before-close="handleClose">
         <template v-if="currentData.info_type === 'edit'">
             <!-- 1. 如果当前是代理人未受理的状态，代理人价格没下来，所以此时只委派就行 -->
-            <template v-if="
-                state === 'waiting' || state === 'agent-accept' || state === 'agent-refuse' ||
+            <template v-if="state === 'waiting' || state === 'agent-accept' || state === 'agent-refuse' ||
                 state === 'distributing' || state === 'finished' || state === 'user-refuse'
-            ">
+                ">
                 <el-form :model="waitingData">
                     <el-form-item v-model="waitingData.openid" label="微信Openid">
                         <el-input v-model="waitingData.openid" placeholder="微信Openid" disabled></el-input>
@@ -240,7 +280,9 @@
                     <el-form-item v-model="waitingData.transitionId" label="订单号">
                         <el-input v-model="waitingData.transitionId" placeholder="微信Openid" disabled></el-input>
                     </el-form-item>
-
+                    <el-form-item v-model="waitingData.propurename" label="商品名">
+                        <el-input v-model="waitingData.propurename" placeholder="商品名" disabled></el-input>
+                    </el-form-item>
                     <el-form-item label="是否是免配送">
                         <el-tag v-if="waitingData.isFree" type="danger">
                             免配送
@@ -251,8 +293,8 @@
                     </el-form-item>
                     <el-form-item label="代理人选择">
                         <el-select v-model="waitingData.agentOpenid">
-                            <el-option v-for="agent in agentInfo" :key="agent.openid"
-                                :label="agent.organization.company" :value="agent.openid">
+                            <el-option v-for="agent in agentInfo" :key="agent.openid" :label="agent.organization.company"
+                                :value="agent.openid">
                             </el-option>
                         </el-select>
                     </el-form-item>
@@ -269,8 +311,16 @@
                                 :value="unit"></el-option>
                         </el-select>
                     </el-form-item>
-                    <el-form-item label="价格">
-                        <el-input type="number" v-model="waitingData.price" placeholder="价格"></el-input>
+                    <el-form-item label="代理报价(单价)">
+                        <el-tag v-if="agentCurrentPrice > waitingData.price" type="warning">
+                            {{ agentCurrentPrice }} / {{ agentCurrentUnit }}
+                        </el-tag>
+                        <el-tag v-else>
+                            {{ agentCurrentPrice }} / {{ agentCurrentUnit }}
+                        </el-tag>
+                    </el-form-item>
+                    <el-form-item label="单价">
+                        <el-input type="number" v-model="waitingData.price" placeholder="单价"></el-input>
                     </el-form-item>
                     <el-form-item label="数量">
                         <el-input type="number" v-model="waitingData.number" placeholder="数量"></el-input>
@@ -296,7 +346,6 @@
             </div>
         </template>
     </el-dialog>
-
     <el-dialog v-model="showAlignDialog">
         <div class="flex flex-row justify-center items-center">
             <div>请选择代理人</div>
@@ -308,6 +357,20 @@
         <div class="flex flex-row">
             <el-button @click="showAlignDialog = false">取消</el-button>
             <el-button @click="listAgent">委派</el-button>
+        </div>
+    </el-dialog>
+    <el-dialog v-model="showDistDialog">
+        <div class="flex flex-row justify-center items-center">
+            你要修改到的状态
+            <el-select v-model="distState">
+                <el-option v-for="stateVal in stateInfo" :key="stateVal.value" :label="stateVal.label"
+                    :value="stateVal.value">
+                </el-option>
+            </el-select>
+        </div>
+        <div class="flex flex-row">
+            <el-button @click="showDistDialog = false">取消</el-button>
+            <el-button @click="changeItemState">修改状态</el-button>
         </div>
     </el-dialog>
 </template>
@@ -322,6 +385,40 @@ import {
 } from 'element-plus';
 import { Ref, ref, watch } from 'vue'
 import request from '../../request';
+
+
+function transformTime(date: Date, formatter = 'yyyy-MM-dd hh:mm:ss') {
+    const o: any = {
+        "M+": date.getMonth() + 1, //month
+        "d+": date.getDate(), //day
+        "h+": date.getHours(), //hour
+        "m+": date.getMinutes(), //minute
+        "s+": date.getSeconds(), //second
+    };
+    if (/(y+)/.test(formatter)) {
+        formatter = formatter.replace(
+            RegExp.$1,
+            (date.getFullYear() + "").substr(4 - RegExp.$1.length)
+        );
+    }
+    if (/(S+)/.test(formatter)) {
+        formatter = formatter.replace(
+            RegExp.$1,
+            ("000" + date.getMilliseconds()).substr(
+                ("000" + date.getMilliseconds()).length - RegExp.$1.length
+            )
+        );
+    }
+    for (let k in o) {
+        if (new RegExp("(" + k + ")").test(formatter)) {
+            formatter = formatter.replace(
+                RegExp.$1,
+                RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length)
+            );
+        }
+    }
+    return formatter;
+}
 
 const userState = useUser();
 
@@ -343,21 +440,7 @@ interface PurchaseRecord {
         unit: string,
         price: number
     }[],
-    [props: string]: string | number | undefined | { openid: string, unit: string, price: number }[]
-}
-
-interface UserItemDetail {
-    unit: string, // 单位
-    number: number, // 数量
-    comment: string | null, // 可以是富文本，也可以是单纯的字符串
-}
-
-// 代理的修改意见
-interface AgentItemDetail {
-    unit: string, // 单位
-    number: number,
-    agentPrice: number, // 代理给出的价格
-    comment: string | null,
+    [props: string]: string | number | undefined | { openid: string, unit: string, price: number }[] | any
 }
 
 const data: Ref<PurchaseRecord[]> = ref([]);
@@ -367,6 +450,8 @@ const agentInfo: Ref<{
         company: string
     }
 }[]> = ref([]);
+
+const userInfo: Ref<AnyObject[]> = ref([]);
 
 const getAgentInfo = () => {
     request.get('/admin/user', {
@@ -383,6 +468,19 @@ const getAgentInfo = () => {
 
 getAgentInfo();
 
+const getUserInfo = () => {
+    return request.get('/admin/user', {
+        params: {
+            openid: userState.openid,
+            user_type: 'user',
+            page: 1,
+            pageSize: 10000,
+        }
+    })
+}
+
+getUserInfo()
+
 const getItemsData = (page = 1, query = {}, success: () => void = () => { }) => {
     request.get(
         '/admin/transition',
@@ -394,9 +492,35 @@ const getItemsData = (page = 1, query = {}, success: () => void = () => { }) => 
                 ...query
             }
         }
-    ).then((res) => {
-        console.log(res);
-        data.value = res.data.data;
+    ).then(async (res) => {
+        console.log('更新订单数据', res);
+        const current_transition_data = res.data.data;
+
+        // 添加user 信息
+
+        const user_info = await getUserInfo()
+
+        console.log(user_info)
+        for (let item of current_transition_data) {
+            for (let user of user_info.data.data) {
+                if (item.openid === user.openid) {
+                    item.user = user;
+                    break;
+                }
+            }
+        }
+        // add last Price
+        for (let item of current_transition_data) {
+            getPrice(item.uuid, item.openid, item.unit).then((price: any) => {
+                item.lastPrice = price[0].lastPrice;
+            })
+        }
+        for (let i = 0, data_len = data.value.length; i < data_len; i++) {
+            data.value.pop()
+        }
+        for (let i = 0; i < current_transition_data.length; i++) {
+            data.value.push(current_transition_data[i]);
+        }
         success();
     }).catch(err => {
         ElMessage.error(err.response.data.message);
@@ -417,6 +541,7 @@ function getPrice(uuid = "", openid = "", unit = "") {
             }
         ).then(res => {
             resolve(res.data.data);
+            console.log("getPrice", res.data.data)
         }).catch(err => {
             reject(err);
         })
@@ -430,17 +555,20 @@ const fetchDetail = async () => {
     // 2.获取当前用户的价格信息
     // 3.尝试获取代理人信息，如果有agentOpenid的话
 
+    const currentData = []
     for (let i = 0; i < data.value.length; i++) {
         const item = data.value[i];
         // @ts-ignore
         const page = await getPrice(item.uuid, item.openid, item.unit) as any;
-        console.log(page);
+        console.log('fetchDetail', page);
         if (page.length > 0) {
             item.lastPrice = page[0].lastPrice;
         } else {
             item.lastPrice = [];
         }
+        currentData.push(item);
     }
+    data.value = currentData;
 };
 
 watch(currentPage, () => {
@@ -470,12 +598,11 @@ watch(state, (newState) => {
 const dialogVisible = ref(false);
 
 function handleClose() {
-
-
     waitingData.value = {
         uuid: "",
         transitionId: "",
         openid: "",
+        propurename: "",
         number: 0,
         unit: "",
         lastPrice: [],
@@ -514,6 +641,7 @@ const waitingData = ref({
     uuid: "",
     openid: "",
     transitionId: "",
+    propurename: "",
     state: "",
     price: 0,
     agentOpenid: "",
@@ -534,20 +662,24 @@ function handleDelete(row) {
     open();
 }
 
+const agentCurrentPrice = ref(0);
+const agentCurrentUnit = ref('');
 // @ts-ignore
 function handleEdit(row) {
-
     waitingData.value.unit = row.unit;
     waitingData.value.uuid = row.uuid;
     waitingData.value.openid = row.openid;
     waitingData.value.agentOpenid = row.agentOpenid || "",
-        waitingData.value.transitionId = row.transitionId;
+        waitingData.value.propurename = row.propurename;
+    waitingData.value.transitionId = row.transitionId;
     waitingData.value.number = row.number;
     waitingData.value.lastPrice = row.lastPrice;
     waitingData.value.state = row.state;
     waitingData.value.isFree = row.isFree || false;
-
     currentData.value.info_type = "edit";
+    agentCurrentPrice.value = row.agentDetail ? Number(row.agentDetail.price) : 0;
+    agentCurrentUnit.value = row.agentDetail ? row.agentDetail.unit : '个';
+    console.log('row', row);
     changePrice()
     getCurrentPropurement(row.uuid);
     open();
@@ -581,10 +713,11 @@ function getCurrentPropurement(uuid) {
 
 
 function changePrice() {
-    console.log(waitingData.value.unit);
+    console.log("changePrice", waitingData.value.lastPrice);
     for (let unit of waitingData.value.lastPrice) {
         if (unit.unit === waitingData.value.unit) {
             waitingData.value.price = unit.price;
+            console.log("比对价格", unit);
         }
     }
 }
@@ -597,7 +730,7 @@ function submit() {
 
     if (waitingData.value.uuid === '' || waitingData.value.number === 0 ||
         waitingData.value.price === 0 || waitingData.value.unit === '') {
-        ElMessage.warning('请填写必要的信息 [单位，数量，价格，物品]');
+        ElMessage.warning('请填写必要的信息 [单位，数量，单价，物品]');
         return;
     } else {
         const transitionData: AnyObject = {
@@ -719,6 +852,8 @@ function deleteItems(data: PurchaseRecord) {
 
 const checked: Ref<string[]> = ref([]);
 const showAlignDialog = ref(false);
+const showDistDialog = ref(false);
+const distState = ref("agent-accept");
 const alignItem = () => { }
 
 function handleCheckAllChange(row: any) {
@@ -780,8 +915,79 @@ function listAgent() {
     })
 }
 
+function changeItemState() {
+    const transitionData = [];
+    console.log(`user change item state ${distState.value}`)
+    for (const item of checked.value) {
+        for (const cur of data.value) {
+            if (cur._id === item) {
+                transitionData.push({
+                    openid: cur.openid,
+                    number: cur.number,
+                    unit: cur.unit,
+                    uuid: cur.uuid,
+                    state: distState.value,
+                    price: cur.price,
+                    agentOpenid: cur.agentOpenid,
+                    transitionId: cur.transitionId,
+                    lastPrice: cur.lastPrice
+                })
+                break;
+            }
+        }
+    }
+    const allPromise = [];
+    for (const item of transitionData) {
+        console.log('提交的订单项', item);
+
+        const curTransitionData = {
+            openid: item.openid,
+            number: item.number,
+            unit: item.unit,
+            state: item.state,
+            price: item.price,
+        }
+
+        if (curTransitionData.price === '' || !curTransitionData.price) {
+            // 如果记录为空，则选择过去的记录
+            for (let priceRecord of item.lastPrice) {
+                if (priceRecord.unit === curTransitionData.unit) {
+                    curTransitionData.price = priceRecord.price;
+                    break;
+                }
+            }
+        }
+
+        console.log('提交记录', curTransitionData);
+        const pro = request.post(
+            '/admin/transition',
+            {
+                openid: userState.openid,
+                transitionId: item.transitionId,
+                query: {
+                    uuid: item.uuid,
+                },
+                transition: curTransitionData
+            }
+        ).then(res => {
+            ElMessage.success('提交成功');
+            handleClose();
+            getItemsData(currentPage.value, {
+                state: state.value
+            }, () => {
+                fetchDetail();
+            });
+        }).catch(err => {
+            ElMessage.error(err.response.data.message);
+        })
+        allPromise.push(pro);
+    }
+
+    const allPromiseWaiting = Promise.all(allPromise);
+    allPromiseWaiting.finally(() => {
+        showDistDialog.value = false;
+        checked.value = [];
+    })
+}
+
 </script>
-
-<style scoped>
-
-</style>

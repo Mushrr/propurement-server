@@ -2,7 +2,7 @@
 
 import monthGroupBy from "./monthGroupBy";
 import { HistoryData } from "./typings";
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 
 export default function monthGroupExcel(data: HistoryData[]) {

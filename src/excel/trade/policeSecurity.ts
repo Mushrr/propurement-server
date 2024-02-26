@@ -11,7 +11,7 @@ import { HistoryData } from "../typings";
  * @param fracId 分号
  * @returns 
  */
-export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: number,
+export default function policeTrade(data: HistoryData[], tradeId: number, fracId: number, 
     date: Date, company: string, principal: string, title: string = '湖北溪河源农业开发有限公司') {
     const xhyTradeData: any[] = [];
     // header
@@ -20,12 +20,12 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
     ])
     xhyTradeData.push([
         `购买单位：${company}${tradeId}-${fracId}`,
+        ``,
         "",
         "",
+        `录单日期：${date.getFullYear()}年${date.getMonth()+1}月${date.getDate()}日`,
         "",
-        `录单日期：${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`,
-        "",
-        ""
+        ``
     ])
     // main
     xhyTradeData.push([
@@ -53,7 +53,6 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
         summary += (Number(item.number) * Number(item.price));
         ind += 1;
     }
-
     while (ind < 14) {
         xhyTradeData.push([
             ind,
@@ -67,8 +66,8 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
         ind += 1;
     }
     xhyTradeData.push([
-        '总计',
-        '',
+        '合计金额',
+        `大写: ${convertCurrency(summary)}`,
         '',
         '',
         '',
@@ -79,30 +78,14 @@ export default function xhyTrade(data: HistoryData[], tradeId: number, fracId: n
     // footer
 
     xhyTradeData.push([
-        `采购人：${principal}   证明人： `,
-        "",
-        "",
-        "",
-        `大写：${convertCurrency(summary)}`,
-        ""
+        `食堂负责人：                 采购员：${principal}         仓库保管员:                       供应商:             `,
     ])
     console.log(xhyTradeData);
     return xhyTradeData;
 }
 
-export function xhyStyle(sheet: Sheet) {
+export function policeStyle(sheet: Sheet) {
     const range = XLSX.utils.decode_range(sheet['!ref']!);
-
-    sheet["!margins"] = {
-        top: 0.43,
-        bottom: 2.54,
-        footer: 1.27,
-        header: 0.43,
-        left: 0.41,
-        right: 0.41,
-    }
-
-    // wide
 
     // merge
     sheet["!merges"] = [
@@ -138,24 +121,24 @@ export function xhyStyle(sheet: Sheet) {
         },
         {
             s: {
-                c: 0,
-                r: 17
+                c: 1,
+                r: 16
             },
             e: {
-                c: 3,
-                r: 17
+                c: 4,
+                r: 16
             }
         },
         {
             s: {
-                c: 4,
+                c: 0,
                 r: 17
             },
             e: {
                 c: 6,
                 r: 17
             }
-        }
+        },
     ]
 
     // TODO 不支持行高设置
@@ -183,6 +166,15 @@ export function xhyStyle(sheet: Sheet) {
             wch: 10,
         }
     ];
+
+    sheet["!margins"] = {
+        "top": 0.43,
+        "bottom": 2.54,
+        "footer": 1.27,
+        "header": 0.43,
+        "left": 0.41,
+        "right": 0.41
+    }
 
     const borderStyle = {
         style: "thin",
@@ -224,6 +216,24 @@ export function xhyStyle(sheet: Sheet) {
                             horizontal: "left"
                         }
                     }
+                } else if (R === 16) {
+                    // 公安总计行
+                    cell.s = {
+                        font: {
+                            name: "宋体",
+                            sz: 11,
+                            bold: false
+                        },
+                        border: {
+                            top: borderStyle,
+                            left: borderStyle,
+                            right: borderStyle,
+                            bottom: borderStyle
+                        }
+                    };
+                    cell.s.alignment = {
+                        horizontal: 'center'
+                    }
                 } else if (R === 17) {
                     cell.s = {}
                     if (C === 0 || C === 1 || C === 5 || C === 6) {
@@ -236,7 +246,7 @@ export function xhyStyle(sheet: Sheet) {
                         font: {
                             name: "宋体",
                             sz: 11,
-                            bold: true
+                            bold: false
                         },
                         border: {
                             top: borderStyle,

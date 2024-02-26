@@ -146,7 +146,11 @@ function submit() {
             }
         }
     ).then(res => {
-        ElMessage.success("添加成功");
+        if (res.status === 200) {
+            ElMessage.success("添加成功");
+        } else {
+            ElMessage.warning(`添加失败,${res.data.message}`)
+        } 
         clean();
         fetchAllRatio();
     }).catch(err => {

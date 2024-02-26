@@ -6,6 +6,7 @@
                     <div class="flex flex-row">
                         <el-button type="info" @click="detail(data[scope.$index])">查看</el-button>
                         <el-button type="primary" @click="change(data[scope.$index])">修改</el-button>
+                        <el-button type="warning" @click="del(data[scope.$index])">删除</el-button>
                     </div>
                 </template>
                 <template #default="scope" v-if="col.label === '用户类型'">
@@ -72,8 +73,8 @@
                     {{ dialogData.data.organization.position }}
                 </ElDescriptionsItem>
             </ElDescriptions>
-            <ElDescriptions title="历史价格">
-                <ElDescriptionsItem label="点击获取用户历史价格信息">
+            <ElDescriptions title="历史单价">
+                <ElDescriptionsItem label="点击获取用户历史单价信息">
                     <el-form>
                         <el-form-item label="获取">
                             <el-button type="primary" @click="getHistoryPrice">获取</el-button>
@@ -84,7 +85,7 @@
                         <el-button @click="filterFunc">过滤</el-button>
                     </div>
                 </ElDescriptionsItem>
-                <ElDescriptionsItem label="历史价格">
+                <ElDescriptionsItem label="历史单价">
                     <el-table :data="historyPriceData">
                         <el-table-column prop="name" label="物品名称" width="100">
                         </el-table-column>
@@ -102,7 +103,7 @@
                                 </el-tag>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="lastPrice" label="价格">
+                        <el-table-column prop="lastPrice" label="单价">
                             <template #default="scope">
                                 <el-tag>
                                     <el-tag type="success" v-for="price in scope.row.lastPrice">
@@ -111,7 +112,7 @@
                                 </el-tag>
                             </template>
                         </el-table-column>
-                        <el-table-column label="添加价格记录" width="100">
+                        <el-table-column label="添加单价记录" width="100">
                             <template #default="scope">
                                 <el-button type="primary" @click="addPriceRecord(scope.row)">添加</el-button>
                             </template>
@@ -130,8 +131,8 @@
                                 :value="unit"></el-option>
                         </el-select>
                     </el-form-item>
-                    <el-form-item label="价格">
-                        <el-input type="number" v-model="changeUnitData.price" placeholder="请输入价格"></el-input>
+                    <el-form-item label="单价">
+                        <el-input type="number" v-model="changeUnitData.price" placeholder="请输入单价"></el-input>
                     </el-form-item>
                     <el-form-item>
                         <el-button type="primary" @click="changeUnit">提交</el-button>
@@ -188,6 +189,13 @@
                     <el-button type="primary" @click="changeUserData">提交</el-button>
                 </el-form-item>
             </el-form>
+        </template>
+        <template v-else-if="dialogData.dialogType === 'delete'">
+            你确定要删除 <el-tag type="warning">{{ dialogData.data.organization.company }}</el-tag> 吗？
+            <div class="flex flex-row">
+                <el-button type="primary" @click="close">取消</el-button>
+                <el-button type="warning" @click="deleteUserFull(dialogData.data.openid)">删除</el-button>
+            </div>
         </template>
     </el-dialog>
 </template>
@@ -494,6 +502,29 @@ function addUser() {
         name: "",
         phone: "",
         password: ""
+    })
+}
+
+// 删除公司
+
+function deleteUserFull(userOpenid: string) {
+    const req = request.delete(
+        '/admin/user',
+        {
+            params: {
+                openid: userState.openid,
+                userOpenid: userOpenid,
+            }
+        }
+    ).then(res => {
+        console.log(res);
+        ElMessage.success('删除成功');
+        getUser();
+        close();
+    }).catch(err => {
+        ElMessage.error('删除失败');
+        console.log(err);
+        close();
     })
 }
 </script>
