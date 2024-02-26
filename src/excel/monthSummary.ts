@@ -4,7 +4,7 @@ import { HistoryData } from "./typings";
 
 export default function monthSummary(data: HistoryData[]) {
     // 月度汇总数据
-    const monthData: { 日期: string, 单位名称: string, 开票金额: string}[] = [];
+    const monthData: { 日期: string, 单位名称: string, 开票金额: number }[] = [];
     let summary = 0;
     for (const item of data) {
         const date = datetimeToDate(new Date(item.lastModified));
@@ -17,10 +17,10 @@ export default function monthSummary(data: HistoryData[]) {
             monthData.push({
                 日期: ddl,
                 单位名称: company,
-                开票金额: total.toFixed(2)
+                开票金额: total
             });
         } else {
-            monthData[index].开票金额 = (Number(monthData[index].开票金额) + Number(total)).toFixed(2) ;
+            monthData[index].开票金额 += total;
         }
         summary += total;
     }
@@ -28,7 +28,7 @@ export default function monthSummary(data: HistoryData[]) {
     monthData.push({
         日期: "",
         单位名称: "合计",
-        开票金额: summary.toFixed(2)
+        开票金额: summary
     })
     
     return monthData

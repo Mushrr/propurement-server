@@ -58,6 +58,9 @@
                     :label="user.organization?.company"></el-option>
             </el-select>
         </el-form-item>
+        <el-form-item label="单号">
+            <el-input v-model="tradeId" type="number"></el-input>
+        </el-form-item>
         <el-form-item label="订单号">
             <el-select v-model="querySchema.transitionId">
                 <div v-if="data.length > 0 && data[0].buyer">
@@ -527,6 +530,7 @@ function exportExcel(data: any, name: string, page: number) {
     switch (querySchema.value.excelType) {
         case "月数据":
             book = monthSummaryExcel(data);
+<<<<<<< HEAD
             save(book, `${querySchema.value.company}月度汇总表.xlsx`);
             break;
         case "表单":
@@ -572,13 +576,30 @@ function exportExcel(data: any, name: string, page: number) {
                     XLSX.utils.book_append_sheet(book, sheet, '订单');
                     save(book, `${transformTime(new Date(locData[0].lastModified))}-${querySchema.value.company}-${tradeId.value}-${ind+1}.xlsx`);
                 }
+=======
+            save(book, `${name}`);
+            break;
+        case "表单":
+            if (querySchema.value.company) {
+                const arrayData = xhyTrade(data, tradeId.value, page, new Date(data[0].lastModified), querySchema.value.company, principal.value);
+                const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
+                const book = XLSX.utils.book_new();
+
+                XLSX.utils.book_append_sheet(book, sheet, '订单');
+
+                save(book, `${name}`);
+>>>>>>> parent of 67641c7 (日期修改 增加了点选)
             } else {
                 ElMessage.error("请选择开票单位 以及 公司抬头");
             }
             break;
         case "财务系统表":
             book = monthGroupExcel(data);
+<<<<<<< HEAD
             save(book, `${querySchema.value.company}销售登记表.xlsx`);
+=======
+            save(book, `${name}`);
+>>>>>>> parent of 67641c7 (日期修改 增加了点选)
             ElMessage.success('导出成功');
             break;
         default:
@@ -600,7 +621,7 @@ async function extractAsExcel() {
 
     let page = 1;
     let data = [];
-    let res = await request.get(
+    const res = await request.get(
         '/admin/history',
         {
             params: {
@@ -611,12 +632,28 @@ async function extractAsExcel() {
             }
         }
     );
-    while (res.data.data.length !== 0) {
+    data = res.data.data;
+    while (data.length !== 0) {
 
-        await bindItemList(res.data.data);
-        data.push(...res.data.data);
-        page += 1;
-        res = (await request.get(
+        for (const item of data) {
+            await bindItemData(item);
+        }
+        let name = `交易记录-${page}.xlsx`;
+        if (querySchema.value.end && querySchema.value.start) {
+            name = `交易记录-${querySchema.value.start}-${querySchema.value.end}.xlsx`;
+        } else if (querySchema.value.start) {
+            name = `交易记录-${querySchema.value.start}.xlsx`;
+        }
+
+
+        if (querySchema.value.userOpenid) {
+            name = `${data[0].buyer.organization.company}-${name}`
+        }
+        await exportExcel(data, name, page);
+        page++;
+
+
+        data = (await request.get(
             '/admin/history',
             {
                 params: {
@@ -626,10 +663,8 @@ async function extractAsExcel() {
                     ...query
                 }
             }
-        ));
+        )).data.data;
     }
-    tradeId.value = Math.ceil(data.length / 13);
-    exportExcel(data, '订单', page);
 }
 
 const showUsage = ref(false);

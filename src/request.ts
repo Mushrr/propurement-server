@@ -1,8 +1,13 @@
 import axios from 'axios';
 
 const instance = axios.create({
+<<<<<<< HEAD
     baseURL: `${import.meta.env.VITE_URL_PREFIX}`,
     timeout: 10000,
+=======
+    baseURL: `${import.meta.env.VITE_URL_PREFIX}/api`,
+    timeout: 1000,
+>>>>>>> parent of 67641c7 (日期修改 增加了点选)
 })
 
 
