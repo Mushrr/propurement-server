@@ -77,7 +77,6 @@ interface transitionBase {
     uuid: string; // UUID
     [prop: string]: string | object | number;
 }
-
 /**
  * 从数据库中获取一个集合
  * @param ctx 上下文
