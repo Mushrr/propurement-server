@@ -74,12 +74,8 @@
         <el-form-item label="公司抬头">
             <el-select v-model="querySchema.companyTitle">
                 <el-option key="" value="" label="未选择"></el-option>
-                <el-option
-                    v-for="companyTitleOption in config.companyTitle"
-                    :key="companyTitleOption"
-                    :label="companyTitleOption"
-                    :value="companyTitleOption"
-                    >
+                <el-option v-for="companyTitleOption in config.companyTitle" :key="companyTitleOption"
+                    :label="companyTitleOption" :value="companyTitleOption">
                 </el-option>
             </el-select>
         </el-form-item>
@@ -88,10 +84,8 @@
         </el-form-item>
         <el-form-item label="导出格式">
             <el-select v-model="excelFormat">
-                <el-option key="" value="" label="自动选择" default/>
-                <el-option v-for="option in Object.keys(config.excelExtractMapping)" 
-                    :key="option" 
-                    :value="option" 
+                <el-option key="" value="" label="自动选择" default />
+                <el-option v-for="option in Object.keys(config.excelExtractMapping)" :key="option" :value="option"
                     :label="option">
                 </el-option>
             </el-select>
@@ -448,7 +442,7 @@ const bindItemList = async (itemList: PurchaseRecord[]) => {
 
         if (!userFind) {
             item.buyer = {
-                openid: "未知", 
+                openid: "未知",
                 organization: {
                     company: "未知",
                     department: "未知",
@@ -530,7 +524,6 @@ function exportExcel(data: any, name: string, page: number) {
     switch (querySchema.value.excelType) {
         case "月数据":
             book = monthSummaryExcel(data);
-<<<<<<< HEAD
             save(book, `${querySchema.value.company}月度汇总表.xlsx`);
             break;
         case "表单":
@@ -545,8 +538,8 @@ function exportExcel(data: any, name: string, page: number) {
                     if (querySchema.value.company.indexOf(key) > -1) {
                         // @ts-ignore
                         xhyTrade = config.excelExtractMapping[key]['trade'],
-                        // @ts-ignore
-                        xhyStyle = config.excelExtractMapping[key]['style']
+                            // @ts-ignore
+                            xhyStyle = config.excelExtractMapping[key]['style']
                         console.log(key);
                         found = true;
                         break;
@@ -567,39 +560,22 @@ function exportExcel(data: any, name: string, page: number) {
                     xhyStyle = config.excelExtractMapping['默认']['style'];
                 }
                 console.log(maxInd)
-                for (; ind < maxInd; ind ++) {
+                for (; ind < maxInd; ind++) {
                     const locData = data.slice(ind * 13, (ind + 1) * 13);
-                    const arrayData = xhyTrade!(locData, tradeId.value, ind+1, new Date(locData[0].lastModified), querySchema.value.company, principal.value, querySchema.value.companyTitle);
+                    const arrayData = xhyTrade!(locData, tradeId.value, ind + 1, new Date(locData[0].lastModified), querySchema.value.company, principal.value, querySchema.value.companyTitle);
                     console.log('表格数据', arrayData);
                     const sheet = xhyStyle!(XLSX.utils.aoa_to_sheet(arrayData));
                     const book = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(book, sheet, '订单');
-                    save(book, `${transformTime(new Date(locData[0].lastModified))}-${querySchema.value.company}-${tradeId.value}-${ind+1}.xlsx`);
+                    save(book, `${transformTime(new Date(locData[0].lastModified))}-${querySchema.value.company}-${tradeId.value}-${ind + 1}.xlsx`);
                 }
-=======
-            save(book, `${name}`);
-            break;
-        case "表单":
-            if (querySchema.value.company) {
-                const arrayData = xhyTrade(data, tradeId.value, page, new Date(data[0].lastModified), querySchema.value.company, principal.value);
-                const sheet = xhyStyle(XLSX.utils.aoa_to_sheet(arrayData));
-                const book = XLSX.utils.book_new();
-
-                XLSX.utils.book_append_sheet(book, sheet, '订单');
-
-                save(book, `${name}`);
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
             } else {
                 ElMessage.error("请选择开票单位 以及 公司抬头");
             }
             break;
         case "财务系统表":
             book = monthGroupExcel(data);
-<<<<<<< HEAD
             save(book, `${querySchema.value.company}销售登记表.xlsx`);
-=======
-            save(book, `${name}`);
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
             ElMessage.success('导出成功');
             break;
         default:
@@ -672,6 +648,4 @@ const showUsage = ref(false);
 
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

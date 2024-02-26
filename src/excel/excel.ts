@@ -8,6 +8,7 @@ import msGongshuiShiTangTrade, { msGongshuiShiTangStyle } from "./trade/msgongsh
 import fuliyuanTrade, { fuliyuanStyle } from "./trade/fuliyuan";
 import dangxiaoTrade, { dangxiaoStyle } from "./trade/dangxiao";
 import yilingqujiguanTrade, { yilingqujiguanStyle } from "./trade/yilingqujiguan";
+import fengmaoTrade, { fengmaoStyle } from "./trade/fengmao";
 import { HistoryData } from "./typings";
 import XLSX from 'xlsx-js-style'
 import monthSummaryExcel from "./monthSummaryExcel";
@@ -34,7 +35,9 @@ export {
     dangxiaoTrade,
     dangxiaoStyle,
     yilingqujiguanTrade,
-    yilingqujiguanStyle
+    yilingqujiguanStyle,
+    fengmaoTrade,
+    fengmaoStyle
 }
 
 export type {

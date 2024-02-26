@@ -12,7 +12,9 @@ import {
     dangxiaoStyle,
     dangxiaoTrade,
     yilingqujiguanStyle,
-    yilingqujiguanTrade
+    yilingqujiguanTrade,
+    fengmaoTrade,
+    fengmaoStyle
 } from "./excel/excel"
 
 
@@ -43,13 +45,17 @@ const config = {
             trade: xhyTrade,
             style: xhyStyle
         },
-        "宜昌市委党校": {
+        "宜昌市委党校1": {
             trade: dangxiaoTrade,
             style: dangxiaoStyle
         },
         "夷陵区机关后勤服务中心食堂": {
             trade: yilingqujiguanTrade,
             style: yilingqujiguanStyle
+        },
+        "宜昌市委党校2": {
+            trade: fengmaoTrade,
+            style: fengmaoStyle
         }
     }
 }

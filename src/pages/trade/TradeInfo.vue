@@ -1,6 +1,5 @@
 <template>
     <div class="flex flex-row justify-center items-center">
-<<<<<<< HEAD
         <div class="flex flex-col items-center">
             <el-tag class="">
                 订单状态状态
@@ -17,19 +16,6 @@
             <el-button v-if="state !== 'waiting'" @click="showDistDialog = true">批量修改状态</el-button>
             <div v-else></div>
         </div>
-=======
-        <el-tag>
-            订单状态状态
-        </el-tag>
-        <el-radio-group v-model="state">
-            <el-radio-button label="waiting">等待中</el-radio-button>
-            <el-radio-button label="agent-accept">代理人已接受</el-radio-button>
-            <el-radio-button label="agent-refuse">代理人已拒绝</el-radio-button>
-            <el-radio-button label="distributing">正在配发中</el-radio-button>
-            <el-radio-button label="user-refuse">用户拒收</el-radio-button>
-            <el-radio-button label="finished">完成</el-radio-button>
-        </el-radio-group>
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
     </div>
     <div v-if="state === 'waiting'">
         <el-table :data="data">
@@ -58,81 +44,72 @@
                             {{ agent.organization.company }}
                         </el-tag>
                     </template>
-<<<<<<< HEAD
-                </el-table-column>
-                <el-table-column label="商品名称" prop="propurename"></el-table-column>
-                <el-table-column label="交易单号" prop="transitionId"></el-table-column>
-                <!-- <el-table-column label="购买者Openid" prop="openid"></el-table-column> -->
-                <el-table-column label="购买者">
-                    <template #default="scope">
-                        <div>
-                            <ElTag v-if="scope.row.user">
-                                {{ scope.row.user.organization.company }}
-                            </ElTag>
-                            <ElTag v-else>
-                                请求中~
-                            </ElTag>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column label="订单配送时间">
-                    <template #default="scope">{{ transformTime(new Date(scope.row.lastModified))}}</template>
-                </el-table-column>
-                <el-table-column label="单位" width="80">
-                    <template #default="scope">
-                        <ElTag>
-                            {{ scope.row.unit }}
+                </template>
+            </el-table-column>
+            <el-table-column label="商品名称" prop="propurename"></el-table-column>
+            <el-table-column label="交易单号" prop="transitionId"></el-table-column>
+            <!-- <el-table-column label="购买者Openid" prop="openid"></el-table-column> -->
+            <el-table-column label="购买者">
+                <template #default="scope">
+                    <div>
+                        <ElTag v-if="scope.row.user">
+                            {{ scope.row.user.organization.company }}
                         </ElTag>
-                    </template>
-                </el-table-column>
-                <el-table-column label="数量" width="80">
-                    <template #default="scope">
-                        <ElTag>
-                            {{ scope.row.number }}
+                        <ElTag v-else>
+                            请求中~
                         </ElTag>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column label="订单配送时间">
+                <template #default="scope">{{ transformTime(new Date(scope.row.lastModified)) }}</template>
+            </el-table-column>
+            <el-table-column label="单位" width="80">
+                <template #default="scope">
+                    <ElTag>
+                        {{ scope.row.unit }}
+                    </ElTag>
+                </template>
+            </el-table-column>
+            <el-table-column label="数量" width="80">
+                <template #default="scope">
+                    <ElTag>
+                        {{ scope.row.number }}
+                    </ElTag>
+                </template>
+            </el-table-column>
+            <el-table-column label="委派">
+                <template #default="scope">
+                    <template v-for="agent in agentInfo">
+                        <el-tag v-if="agent.openid === scope.row.agentOpenid">
+                            {{ agent.organization.company }}
+                        </el-tag>
                     </template>
-                </el-table-column>
-                <el-table-column label="委派">
-                    <template #default="scope">
-                        <template v-for="agent in agentInfo">
-                            <el-tag v-if="agent.openid === scope.row.agentOpenid">
-                                {{ agent.organization.company }}
-                            </el-tag>
-                        </template>
-                    </template>
-                </el-table-column>
-                <el-table-column label="价格">
-                    <template #default="scope">
-                        <div v-for="price in scope.row.lastPrice">
-                            <template v-if="price.unit === scope.row.unit">
-                                <ElTag>
-                                    {{ price.price }}￥ /{{ price.unit }}
-                                </ElTag>
-                                <ElTag>
-                                    总计: {{ (parseFloat(`${price.price}`) * parseFloat(`${scope.row.number}`)).toFixed(2) }}￥
-                                </ElTag>
-                            </template>
-                        </div>
-                    </template>
-                </el-table-column>
-                <el-table-column label="用户备注">
-                    <template #default="scope">
-                        <div>
-=======
                 </template>
             </el-table-column>
             <el-table-column label="价格">
                 <template #default="scope">
                     <div v-for="price in scope.row.lastPrice">
                         <template v-if="price.unit === scope.row.unit">
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
                             <ElTag>
                                 {{ price.price }}￥ /{{ price.unit }}
                             </ElTag>
                             <ElTag>
-                                总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
+                                总计: {{ (parseFloat(`${price.price}`) * parseFloat(`${scope.row.number}`)).toFixed(2) }}￥
                             </ElTag>
                         </template>
+                    </div>
+                </template>
+            </el-table-column>
+            <el-table-column label="用户备注">
+                <template #default="scope">
+                    <div>
+                        <ElTag>
+                            {{ price.price }}￥ /{{ price.unit }}
+                        </ElTag>
+                        <ElTag>
+                            总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
+                        </ElTag>
                     </div>
                 </template>
             </el-table-column>
@@ -192,7 +169,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column label="订单配送时间">
-                    <template #default="scope">{{ transformTime(new Date(scope.row.lastModified))}}</template>
+                    <template #default="scope">{{ transformTime(new Date(scope.row.lastModified)) }}</template>
                 </el-table-column>
                 <el-table-column label="数量|单位" width="80">
                     <template #default="scope">
@@ -215,33 +192,12 @@
                     <template #default="scope">
                         <div v-for="price in scope.row.lastPrice">
                             <template v-if="price.unit === scope.row.unit">
-<<<<<<< HEAD
                                 <ElTag>
                                     {{ price.price }}￥ /{{ price.unit }}
                                 </ElTag>
                                 <ElTag>
                                     总计: {{ (parseFloat(`${price.price}`) * parseFloat(`${scope.row.number}`)).toFixed(2) }}￥
                                 </ElTag>
-=======
-                                <div v-if="price.price > scope.row.agentDetail.price">
-                                    <ElTag type="success">
-                                        {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
-                                    </ElTag>
-                                    <ElTag type="success">
-                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
-                                        scope.row.number).toFixed(2) }}￥
-                                    </ElTag>
-                                </div>
-                                <div v-else>
-                                    <ElTag type="warning">
-                                        {{ (price.price - scope.row.agentDetail.price).toFixed(2) }}￥ /{{ price.unit }}
-                                    </ElTag>
-                                    <ElTag type="warning">
-                                        总计: {{ ((price.price + (- scope.row.agentDetail.price)).toFixed(2) *
-                                        scope.row.number).toFixed(2) }}￥
-                                    </ElTag>
-                                </div>
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
                             </template>
                         </div>
                     </template>
@@ -422,7 +378,6 @@
             </div>
         </template>
     </el-dialog>
-<<<<<<< HEAD
     <el-dialog v-model="showAlignDialog">
         <div class="flex flex-row justify-center items-center">
             <div>请选择代理人</div>
@@ -450,8 +405,6 @@
             <el-button @click="changeItemState">修改状态</el-button>
         </div>
     </el-dialog>
-=======
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
 </template>
 
 <script lang='ts' setup>
@@ -522,12 +475,12 @@ interface PurchaseRecord {
 }
 
 const data: Ref<PurchaseRecord[]> = ref([]);
-const agentInfo: Ref<{ 
+const agentInfo: Ref<{
     openid: string,
     organization: {
         company: string
     }
- }[]> = ref([]);
+}[]> = ref([]);
 
 const userInfo: Ref<AnyObject[]> = ref([]);
 
@@ -928,7 +881,6 @@ function deleteItems(data: PurchaseRecord) {
     })
 }
 
-<<<<<<< HEAD
 const checked: Ref<string[]> = ref([]);
 const showAlignDialog = ref(false);
 const showDistDialog = ref(false);
@@ -1018,9 +970,6 @@ function changeItemState() {
     const allPromise = [];
     for (const item of transitionData) {
         console.log('提交的订单项', item);
-=======
-</script>
->>>>>>> parent of 67641c7 (日期修改 增加了点选)
 
         const curTransitionData = {
             openid: item.openid,
