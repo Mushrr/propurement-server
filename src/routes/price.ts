@@ -37,19 +37,21 @@ priceRoute.get("/", async (ctx, next) => {
                 id: any,
                 uuid: string,
                 name: string,
-                defaultUnits: string,
+                defaultUnits: string[],
                 category: string,
                 lastPrice: any[]
             } = {
                 id: propure._id,
                 uuid: propure.uuid,
                 name: propure.name,
-                defaultUnits: propure.defaultUnits,
+                // @ts-ignore
+                defaultUnits: propure.defaultUnits.map((unit) => unit.unit),
                 category: propure.category,
                 lastPrice: []
             }
+            console.log(dataSchema);
             try {
-                switch(userValidate) {
+                switch (userValidate) {
                     case "user": {
                         if (propure.userPrice && Array.isArray(propure.userPrice.user)) {
                             for (const price of propure.userPrice.user) {

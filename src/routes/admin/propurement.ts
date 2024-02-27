@@ -43,6 +43,10 @@ adminPropurementRoute.get("/", async (ctx, next) => {
                 let ind = 0;
                 for await (const propurement of propurementCursor) {
                     if (ind >= start) {
+                        // @ts-ignore
+                        let units = propurement.defaultUnits.map(unit => unit.unit);
+                        propurement.unitWithSpec = propurement.defaultUnits;
+                        propurement.defaultUnits = units;
                         propurementData.push(propurement);
                     }
                     ind += 1;
@@ -110,13 +114,17 @@ adminPropurementRoute.post("/", async (ctx, next) => {
                             ...excludePropurement, //  其他信息
                             lastChange: Timestamp.fromNumber(new Date().valueOf())
                         }
-                        updateRatio(ctx, propurement.defaultUnits, "unit");
+
+                        // 过滤单位信息
+                        const filteredUnits = propurement.defaultUnits.map(unit => unit.unit);
+
+                        updateRatio(ctx, filteredUnits, "unit");
                         updateRatio(ctx, propurement.brand as string, "brand");
                         updateRatio(ctx, propurement.category, "category");
-                        
+
                         // find if exist
-                        const propurementExist = await propurementCollection.findOne({name: propurement.name})
-                        
+                        const propurementExist = await propurementCollection.findOne({ name: propurement.name })
+
                         if (propurementExist?._id) {
                             ctx.body = {
                                 code: 401,
@@ -241,7 +249,7 @@ adminPropurementRoute.del("/", async (ctx, next) => {
                 ctx.body = {
                     code: 500,
                     message: "您未传入物品的UUID 无法删除"
-                }    
+                }
                 ctx.status = 500;
                 logger.warn(`未传入物品UUID 无法删除!!`)
             }

@@ -31,7 +31,6 @@ userRoute.post("/", async (ctx: Context, next) => {
     // UserInfo
     const mongo = ctx.state.db as Db;
     const userCollection = mongo.collection("user");
-
     if (hasProperties(ctx.request.body, ["session_key"])) {
         // 返回
         // 目前微信小程序已经不需要获取用户的个人信息了，可以直接通过open-data获得
