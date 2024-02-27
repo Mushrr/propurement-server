@@ -106,8 +106,8 @@
                     总计: {{ totalPrice }}
                 </div>
                 <div flex flex-row items-center justify-between>
-                    <ElDatePicker v-model="transitionTime" placeholder="选择时间" 
-                    type="datetime" value-format="YYYY-MM-DD HH:mm:ss"></ElDatePicker>
+                    <ElDatePicker v-model="transitionTime" placeholder="选择时间" type="datetime"
+                        value-format="YYYY-MM-DD HH:mm:ss"></ElDatePicker>
                     <el-button @click="submitBucket" class="w-50%">提交</el-button>
                 </div>
                 {{ transitionTime }}
@@ -130,8 +130,8 @@
             </el-form-item>
             <el-form-item size="large" label="单位">
                 <el-radio-group v-model="transitionDisplay.detail.unit">
-                    <el-radio-button v-for="unit in currentPropurement.defaultUnits" :label="unit" :key="unit"
-                        :value="unit">
+                    <el-radio-button v-for="unit in currentPropurement.defaultUnits" :label="unit.unit" :key="unit.unit"
+                        :value="unit.unit">
                     </el-radio-button>
                 </el-radio-group>
             </el-form-item>
@@ -150,7 +150,8 @@
                 <el-input type="number" v-model="transitionDisplay.detail.price"></el-input>
             </el-form-item>
             <el-form-item label="总计">
-                <div class="text-2xl text-red">{{ transitionDisplay.detail.number * transitionDisplay.detail.price }} ￥</div>
+                <div class="text-2xl text-red">{{ transitionDisplay.detail.number * transitionDisplay.detail.price }} ￥
+                </div>
             </el-form-item>
             <el-form-item>
                 <div class="flex flex-row w-100%">
@@ -169,7 +170,7 @@ import {
     ElDescriptionsItem, ElSelect, ElOption, ElForm, ElFormItem,
     ElInput, ElPagination, ElRadioGroup, ElRadioButton, ElInputNumber,
     ElMessage,
-ElDatePicker
+    ElDatePicker
 } from 'element-plus';
 import { Ref, ref, watch } from 'vue'
 import request from '../../request';
@@ -530,6 +531,4 @@ const submitBucket = () => {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

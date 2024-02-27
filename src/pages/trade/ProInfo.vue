@@ -17,13 +17,8 @@
                 </ElTag>
             </template>
             <template #default="scope" v-else-if="pro.label === '单位'">
-                <ElTag type="success" v-for="unit in scope.row.defaultUnits" :key="unit">
+                <ElTag type="success" v-for="unit in scope.row.unitWitSpec" :key="unit.unit">
                     {{ unit }}
-                </ElTag>
-            </template>
-            <template #default="scope" v-else-if="pro.label === '单位'">
-                <ElTag>
-                    {{ scope.row.category }}
                 </ElTag>
             </template>
             <template #default="scope" v-else-if="pro.label === '修改'">
@@ -59,8 +54,8 @@
                     </ElTag>
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="单位">
-                    <ElTag type="success" v-for="unit in currentPro.data.defaultUnits" :key="unit">
-                        {{ unit }}
+                    <ElTag type="success" v-for="unit in currentPro.data.unitWithSpec" :key="unit">
+                        {{ unit.unit }} | {{ unit.specification }}
                     </ElTag>
                 </ElDescriptionsItem>
                 <ElDescriptionsItem label="备注">
@@ -90,15 +85,18 @@
                     <el-input v-model="currentPro.data.category"></el-input>
                 </el-form-item>
                 <el-form-item label="单位">
-                    <el-tag v-for="tag in currentPro.data.defaultUnits" :key="tag" class="mx-1" closable
-                        :disable-transitions="false" @close="handleClose(tag)">
-                        {{ tag }}
-                    </el-tag>
-                    <el-input v-if="showAddTag" ref="InputRef" v-model="currentTagData" class="ml-1 w-20" size="small"
+                    <!-- 转化成为 for -->
+                    <template v-for="(tag, ind) in currentPro.data.unitWithSpec" :key="tag.unit">
+                        <el-input placeholder="单位" v-model="tag.unit"></el-input>
+                        <el-input placeholder="规格" v-model="tag.specification"></el-input>
+                        <el-button @click="deleteAUnit(ind)" type="danger">删除</el-button>
+                    </template>
+                    <el-button @click="addAUnit">添加</el-button>
+                    <!-- <el-input v-if="showAddTag" ref="InputRef" v-model="currentTagData" class="ml-1 w-20" size="small"
                         @keyup.enter="handleInputConfirm" @blur="handleInputConfirm" />
                     <el-button v-else class="button-new-tag ml-1" size="small" @click="showAddTag = true">
                         + New Tag
-                    </el-button>
+                    </el-button> -->
                 </el-form-item>
                 <el-form-item label="备注">
                     <el-input v-model="currentPro.data.defaultPage"></el-input>
@@ -241,9 +239,18 @@ function del(data) {
 
 const showHistory = ref(false);
 
+function deleteAUnit(index: number) {
+    currentPro.value.data.unitWithSpec.splice(index, 1);
+}
+
+function addAUnit() {
+    currentPro.value.data.unitWithSpec.push({
+        unit: '',
+        specification: ''
+    })
+}
+
 function submitChange() {
-
-
     request.post(
         '/admin/propurement',
         {
@@ -254,7 +261,7 @@ function submitChange() {
                 name: currentPro.value.data.name,
                 brand: currentPro.value.data.brand,
                 category: currentPro.value.data.category,
-                defaultUnits: currentPro.value.data.defaultUnits,
+                defaultUnits: currentPro.value.data.unitWithSpec, // 单位 与  规格
                 defaultPage: currentPro.value.data.defaultPage,
             }
         }
@@ -274,21 +281,21 @@ const currentTagData = ref("");
 
 function handleInputConfirm() {
     const inputValue = currentTagData.value.trim();
-    if (!Array.isArray(currentPro.value.data.defaultUnits)) {
-        currentPro.value.data.defaultUnits = [];
+    if (!Array.isArray(currentPro.value.data.unitWithSpec)) {
+        currentPro.value.data.unitWithSpec = [];
     }
     if (inputValue) {
-        currentPro.value.data.defaultUnits.push(inputValue);
+        currentPro.value.data.unitWithSpec.push(inputValue);
     }
     showAddTag.value = false;
     currentTagData.value = "";
 }
 // @ts-ignore
 function handleClose(tag) {
-    const index = currentPro.value.data.defaultUnits.indexOf(tag);
+    const index = currentPro.value.data.unitWithSpec.indexOf(tag);
     if (index > -1) {
-        currentPro.value.data.defaultUnits.splice(index, 1);
-        console.log(currentPro.value.data.defaultUnits);
+        currentPro.value.data.unitWithSpec.splice(index, 1);
+        console.log(currentPro.value.data.unitWithSpec);
     }
 }
 
@@ -312,6 +319,4 @@ function submitDel() {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

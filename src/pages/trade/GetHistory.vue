@@ -611,9 +611,8 @@ async function extractAsExcel() {
     data = res.data.data;
     while (data.length !== 0) {
 
-        for (const item of data) {
-            await bindItemData(item);
-        }
+        await bindItemList(data);
+        ElMessage.error('请不要使用这个导出功能!');
         let name = `交易记录-${page}.xlsx`;
         if (querySchema.value.end && querySchema.value.start) {
             name = `交易记录-${querySchema.value.start}-${querySchema.value.end}.xlsx`;

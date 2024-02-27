@@ -105,18 +105,6 @@
                 <template #default="scope">
                     <div>
                         <ElTag>
-                            {{ price.price }}￥ /{{ price.unit }}
-                        </ElTag>
-                        <ElTag>
-                            总计: {{ (price.price * scope.row.number).toFixed(2) }}￥
-                        </ElTag>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="用户备注">
-                <template #default="scope">
-                    <div>
-                        <ElTag>
                             {{ scope.row.userComment }}
                         </ElTag>
                     </div>
