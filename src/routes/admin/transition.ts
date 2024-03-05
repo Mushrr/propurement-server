@@ -103,7 +103,6 @@ transitionRoute.post("/", async (ctx, next) => {
                 $set: objectToMongoUpdateSchema(req.transition)
             })
 
-
             ctx.body = {
                 code: 200,
                 msg: "订单状态已更新"
