@@ -25,6 +25,11 @@ adminPropurementRoute.get("/", async (ctx, next) => {
         const userValidate = await validateUser(req.openid as string, ctx);
         if (userValidate === "admin") {
             const query = objectToMongoUpdateSchema(extractObject(req, ["openid", "page", "pageSize"]));
+            if (query.name) {
+                query.name = {
+                    $regex: `.*${query.name}.*`
+                }
+            }
             const propurementCursor = propurementCollection.find(
                 query
             );
